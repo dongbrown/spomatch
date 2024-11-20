@@ -1,10 +1,12 @@
 package com.spomatch.dto.program.response;
 
 import com.spomatch.common.paging.PagingDTO;
+import com.spomatch.dto.program.ProgramDTO;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Map;
 
 @Getter
