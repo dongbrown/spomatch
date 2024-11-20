@@ -10,8 +10,8 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI springShopOpenAPI() {
         return new OpenAPI()
-                .info(new Info().title("블로그 API")
-                        .description("블로그 API 명세서")
+                .info(new Info().title("Spomatch API")
+                        .description("Spomatch API 명세서")
                         .version("v1.0.0"));
     }
 }
