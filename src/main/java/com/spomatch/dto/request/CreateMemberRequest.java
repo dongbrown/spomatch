@@ -1,4 +1,4 @@
-package com.spomatch.dto;
+package com.spomatch.dto.request;
 
 import com.spomatch.entity.Member;
 import lombok.Builder;
