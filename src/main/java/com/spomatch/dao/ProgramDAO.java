@@ -1,10 +1,9 @@
-package com.spomatch.dao.program;
+package com.spomatch.dao;
 
-import com.spomatch.dto.program.ProgramDTO;
-import com.spomatch.dto.program.request.ProgramSearchRequestDTO;
+import com.spomatch.dto.ProgramDTO;
+import com.spomatch.dto.request.ProgramSearchRequestDTO;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ProgramDAO {
     // 프로그램 목록 조회

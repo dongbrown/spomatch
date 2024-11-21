@@ -1,8 +1,7 @@
-package com.spomatch.dao.program;
+package com.spomatch.dao;
 
-import com.spomatch.dao.program.ProgramDAO;
-import com.spomatch.dto.program.ProgramDTO;
-import com.spomatch.dto.program.request.ProgramSearchRequestDTO;
+import com.spomatch.dto.ProgramDTO;
+import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSession;
