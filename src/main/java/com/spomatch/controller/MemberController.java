@@ -1,7 +1,7 @@
 package com.spomatch.controller;
 
-import com.spomatch.dto.CreateMemberRequest;
-import com.spomatch.dto.MemberResponse;
+import com.spomatch.dto.request.CreateMemberRequest;
+import com.spomatch.dto.response.MemberResponse;
 import com.spomatch.entity.Member;
 import com.spomatch.service.MemberService;
 import lombok.RequiredArgsConstructor;

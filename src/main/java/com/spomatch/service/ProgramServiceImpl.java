@@ -1,23 +1,35 @@
 package com.spomatch.service;
 
+import aj.org.objectweb.asm.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spomatch.dao.ProgramDAO;
 import com.spomatch.dto.ProgramDTO;
 import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import com.spomatch.dto.response.ProgramDetailResponseDTO;
 import com.spomatch.dto.response.ProgramListResponseDTO;
+import com.spomatch.entity.SportsFacilityProgram;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProgramServiceImpl implements ProgramService {
+
+    private final EntityManager entityManager;
+    private final ObjectMapper objectMapper;
+
+    private double currentProgress = 0.0;
 
     private final ProgramDAO programDAO;
 //    private final LocationService locationService;
@@ -158,4 +170,63 @@ public class ProgramServiceImpl implements ProgramService {
 //                .registerCount(programDAO.selectRegisterCount(programId))
 //                .build();
 //    }
+
+
+    @Override
+    @Transactional
+    public void importJsonData(String filePath) {
+        try {
+            File file = new File(filePath);
+
+            List<SportsFacilityProgram> programs = Arrays.asList(
+                    objectMapper.readValue(file, SportsFacilityProgram[].class));
+
+            int batchSize = 1000;
+            int totalSize = programs.size();
+            long startTime = System.currentTimeMillis();
+
+            for (int i = 0; i < totalSize; i += batchSize) {
+                List<SportsFacilityProgram> batch = programs.subList(
+                        i, Math.min(totalSize, i + batchSize)
+                );
+
+                for (SportsFacilityProgram program : batch) {
+                    entityManager.persist(program);
+                }
+
+                entityManager.flush();
+                entityManager.clear();
+
+                int processedCount = Math.min(i + batchSize, totalSize);
+                updateAndLogProgress(startTime, processedCount, totalSize);
+            }
+
+            long totalTime = (System.currentTimeMillis() - startTime) / 1000;
+            log.info("Import completed. Total time: {}s", totalTime);
+
+        } catch (Exception e) {
+            log.error("Failed to import JSON", e);
+            throw new RuntimeException("JSON 파일 처리 중 오류 발생", e);
+        }
+    }
+
+    @Override
+    public double getProgress() {
+        return currentProgress;
+    }
+
+    private void updateAndLogProgress(long startTime, int processedCount, int totalSize) {
+        long currentTime = System.currentTimeMillis();
+        long elapsedSeconds = (currentTime - startTime) / 1000;
+        double recordsPerSecond = elapsedSeconds > 0 ? processedCount / (double) elapsedSeconds : 0;
+
+        currentProgress = (processedCount * 100.0) / totalSize;
+
+        log.info("Processed: {}/{} ({}%) - {} records/sec",
+                processedCount,
+                totalSize,
+                String.format("%.2f", currentProgress),
+                String.format("%.2f", recordsPerSecond)
+        );
+    }
 }
