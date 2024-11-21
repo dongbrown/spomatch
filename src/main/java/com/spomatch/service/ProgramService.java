@@ -23,4 +23,17 @@ public interface ProgramService {
 
     // 프로그램 추천 목록 조회
     ProgramListResponseDTO getRecommendedPrograms(String userId, int limit);
+
+    /**
+     * JSON 파일에서 프로그램 데이터를 읽어와 DB에 저장
+     * @param filePath JSON 파일 경로
+     * @throws RuntimeException JSON 파일 처리 중 오류 발생시
+     */
+    void importJsonData(String filePath);
+
+    /**
+     * 진행상황 조회
+     * @return 현재 진행률 (0-100)
+     */
+    double getProgress();
 }
