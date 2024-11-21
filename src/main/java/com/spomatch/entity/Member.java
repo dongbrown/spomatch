@@ -1,13 +1,16 @@
 package com.spomatch.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import com.spomatch.common.enums.MemberStatus;
+import com.spomatch.common.enums.Role;
+import com.spomatch.common.enums.member.Gender;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -28,4 +31,26 @@ public class Member {
 
     @Column(nullable = false)
     private String name;
+
+    private String email;
+
+    private String phoneNumber;
+
+    private String address;
+
+    @Column
+    @DateTimeFormat(pattern = "yyyyMMdd")
+    private LocalDate birthDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 1)
+    private Gender gender;
+
+    @Column(name = "role")
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private MemberStatus status;
 }
