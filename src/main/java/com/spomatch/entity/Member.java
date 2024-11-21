@@ -17,10 +17,10 @@ import lombok.NoArgsConstructor;
 public class Member {
     @Id
     @GeneratedValue
-    @Column(name = "MEMBER_ID", updatable = false, nullable = false)
+    @Column(name = "MEMBER_ID", updatable = false)
     private Long id;
 
-    @Column(name = "login_id", updatable = false, nullable = false)
+    @Column(name = "login_id", updatable = false)
     private String loginId;
 
     @Column(nullable = false)
