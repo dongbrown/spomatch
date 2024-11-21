@@ -86,17 +86,27 @@ public class ProgramDAOImpl implements ProgramDAO {
     }
 
     @Override
-    public List<String> selectRegionList() {
-        return sqlSession.selectList(NAMESPACE + "selectRegionList");
+    public List<String> selectCityList() {
+        return sqlSession.selectList(NAMESPACE + "selectCityList");
     }
 
     @Override
-    public List<String> selectSportTypeList() {
-        return sqlSession.selectList(NAMESPACE + "selectSportTypeList");
+    public List<String> selectDistrictList() {
+        return sqlSession.selectList(NAMESPACE + "selectDistrictList");
     }
 
     @Override
-    public List<String> selectAgeTypeList() {
-        return sqlSession.selectList(NAMESPACE + "selectAgeTypeList");
+    public List<String> selectFacilityTypeList() {
+        return sqlSession.selectList(NAMESPACE + "selectFacilityTypeList");
+    }
+
+    @Override
+    public List<String> selectProgramTypeList() {
+        return sqlSession.selectList(NAMESPACE + "selectProgramTypeList");
+    }
+
+    @Override
+    public List<String> selectTargetAgeList() {
+        return sqlSession.selectList(NAMESPACE + "selectTargetAgeList");
     }
 }

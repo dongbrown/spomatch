@@ -37,7 +37,9 @@ public interface ProgramDAO {
     List<ProgramDTO> selectRecommendedPrograms(String userId, int limit);
 
     // 필터 옵션 조회
-    List<String> selectRegionList();
-    List<String> selectSportTypeList();
-    List<String> selectAgeTypeList();
+    List<String> selectCityList();         // 시도 목록
+    List<String> selectDistrictList();     // 시군구 목록
+    List<String> selectFacilityTypeList(); // 시설유형 목록
+    List<String> selectProgramTypeList();  // 프로그램유형 목록
+    List<String> selectTargetAgeList();    // 대상연령 목록
 }

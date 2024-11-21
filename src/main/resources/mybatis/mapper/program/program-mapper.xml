@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Program">
+    <!-- 프로그램 목록 조회 -->
+    <select id="selectProgramList" parameterType="ProgramSearchRequestDTO"
+            resultType="ProgramDTO">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, A.* FROM (
+        SELECT
+        facility_name,
+        facility_type_name,
+        facility_address,
+        facility_phone_number,
+        city_code,
+        city_name,
+        district_code,
+        district_name,
+        program_type_name,
+        program_name,
+        program_target_name,
+        program_begin_date,
+        program_end_date,
+        program_operation_days,
+        program_operation_time,
+        program_recruit_number,
+        program_price,
+        program_price_type_name,
+        homepage_url,
+        safety_management_content,
+        education_goal_content,
+        protector_participation_yn,
+        leader_qualification_content
+        FROM PROGRAMS
+        WHERE 1=1
+        <if test="cityName != null and cityName != ''">
+            AND city_name = #{cityName}
+        </if>
+        <if test="districtName != null and districtName != ''">
+            AND district_name = #{districtName}
+        </if>
+        <if test="programTargetName != null and programTargetName != ''">
+            AND program_target_name = #{programTargetName}
+        </if>
+        <if test="weekdays != null and weekdays.size > 0">
+            AND program_operation_days IN
+            <foreach item="day" collection="weekdays" open="(" separator="," close=")">
+                #{day}
+            </foreach>
+        </if>
+        <if test="minPrice != null">
+            AND program_price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND program_price <= #{maxPrice}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'deadline'">
+                program_end_date ASC
+            </when>
+            <otherwise>
+                program_begin_date DESC
+            </otherwise>
+        </choose>
+        ) A WHERE ROWNUM <= #{paging.end}
+        ) WHERE rnum > #{paging.start}
+    </select>
+
+    <!-- 프로그램 전체 개수 조회 -->
+    <select id="selectProgramCount" parameterType="ProgramSearchRequestDTO"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM PROGRAMS
+        WHERE 1=1
+        <if test="cityName != null and cityName != ''">
+            AND city_name = #{cityName}
+        </if>
+        <if test="districtName != null and districtName != ''">
+            AND district_name = #{districtName}
+        </if>
+        <if test="programTargetName != null and programTargetName != ''">
+            AND program_target_name = #{programTargetName}
+        </if>
+        <if test="weekdays != null and weekdays.size > 0">
+            AND program_operation_days IN
+            <foreach item="day" collection="weekdays" open="(" separator="," close=")">
+                #{day}
+            </foreach>
+        </if>
+        <if test="minPrice != null">
+            AND program_price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND program_price <= #{maxPrice}
+        </if>
+    </select>
+
+    <!-- 프로그램 상세 조회 -->
+    <select id="selectProgramDetail" parameterType="long" resultType="ProgramDTO">
+        SELECT
+            facility_name,
+            facility_type_name,
+            facility_address,
+            facility_phone_number,
+            city_code,
+            city_name,
+            district_code,
+            district_name,
+            program_type_name,
+            program_name,
+            program_target_name,
+            program_begin_date,
+            program_end_date,
+            program_operation_days,
+            program_operation_time,
+            program_recruit_number,
+            program_price,
+            program_price_type_name,
+            homepage_url,
+            safety_management_content,
+            education_goal_content,
+            protector_participation_yn,
+            leader_qualification_content
+        FROM PROGRAMS
+        WHERE program_id = #{programId}
+    </select>
+
+    <!-- 조회수 증가 -->
+    <update id="updateViewCount" parameterType="long">
+        UPDATE PROGRAMS
+        SET view_count = view_count + 1
+        WHERE program_id = #{programId}
+    </update>
+
+    <!-- 찜하기 상태 확인 -->
+    <select id="checkLikeStatus" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM PROGRAM_LIKES
+        WHERE program_id = #{programId}
+          AND user_id = #{userId}
+    </select>
+
+    <!-- 찜하기 추가 -->
+    <insert id="insertProgramLike" parameterType="map">
+        INSERT INTO PROGRAM_LIKES (
+            program_id,
+            user_id,
+            created_at
+        ) VALUES (
+                     #{programId},
+                     #{userId},
+                     SYSDATE
+                 )
+    </insert>
+
+    <!-- 찜하기 삭제 -->
+    <delete id="deleteProgramLike" parameterType="map">
+        DELETE FROM PROGRAM_LIKES
+        WHERE program_id = #{programId}
+          AND user_id = #{userId}
+    </delete>
+
+    <!-- 찜하기 개수 조회 -->
+    <select id="selectLikeCount" parameterType="long" resultType="long">
+        SELECT COUNT(*)
+        FROM PROGRAM_LIKES
+        WHERE program_id = #{programId}
+    </select>
+
+    <!-- 신청 인원 조회 -->
+    <select id="selectRegisterCount" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM PROGRAM_REGISTERS
+        WHERE program_id = #{programId}
+    </select>
+
+    <!-- 추천 프로그램 조회 -->
+    <select id="selectRecommendedPrograms" parameterType="map"
+            resultType="ProgramDTO">
+        SELECT
+        facility_name,
+        facility_type_name,
+        facility_address,
+        facility_phone_number,
+        city_code,
+        city_name,
+        district_code,
+        district_name,
+        program_type_name,
+        program_name,
+        program_target_name,
+        program_begin_date,
+        program_end_date,
+        program_operation_days,
+        program_operation_time,
+        program_recruit_number,
+        program_price,
+        program_price_type_name,
+        homepage_url,
+        safety_management_content,
+        education_goal_content,
+        protector_participation_yn,
+        leader_qualification_content
+        FROM PROGRAMS p
+        WHERE EXISTS (
+        SELECT 1
+        FROM PROGRAM_LIKES l
+        WHERE l.user_id = #{userId}
+        AND l.program_id = p.program_id
+        )
+        AND ROWNUM <= #{limit}
+        ORDER BY program_begin_date DESC
+    </select>
+
+    <!-- 시도 목록 조회 -->
+    <select id="selectCityList" resultType="string">
+        SELECT DISTINCT city_name
+        FROM PROGRAMS
+        ORDER BY city_name
+    </select>
+
+    <!-- 시군구 목록 조회 -->
+    <select id="selectDistrictList" resultType="string">
+        SELECT DISTINCT district_name
+        FROM PROGRAMS
+        ORDER BY district_name
+    </select>
+
+    <!-- 시설유형 목록 조회 -->
+    <select id="selectFacilityTypeList" resultType="string">
+        SELECT DISTINCT facility_type_name
+        FROM PROGRAMS
+        ORDER BY facility_type_name
+    </select>
+
+    <!-- 프로그램유형 목록 조회 -->
+    <select id="selectProgramTypeList" resultType="string">
+        SELECT DISTINCT program_type_name
+        FROM PROGRAMS
+        ORDER BY program_type_name
+    </select>
+
+    <!-- 대상연령 목록 조회 -->
+    <select id="selectTargetAgeList" resultType="string">
+        SELECT DISTINCT program_target_name
+        FROM PROGRAMS
+        ORDER BY program_target_name
+    </select>
+</mapper>

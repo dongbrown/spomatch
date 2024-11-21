@@ -12,29 +12,20 @@ import java.util.List;
 @Getter @Setter
 @NoArgsConstructor
 public class ProgramSearchRequestDTO {
-    // 검색 조건
-    private String region;
-    private String sportType;
-    private String ageType;
-    private List<String> weekdays;
+    private String cityName;          // 시도명
+    private String districtName;      // 시군구명
+    private String facilityTypeName;  // 시설유형명
+    private String programTypeName;   // 프로그램유형명
+    private String programTargetName; // 프로그램대상명
     private Integer minPrice;
     private Integer maxPrice;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private String sortType = "latest";  // 기본값 최신순
+    private String startDate;
+    private String endDate;
+    private List<String> weekdays;
+    private String sortBy = "latest";
 
     // 페이징 정보
-    private int page = 1;              // 현재 페이지 (기본값 1)
-    private int size = 10;             // 페이지당 개수 (기본값 10)
-    private PagingDTO paging;          // 페이징 정보를 담는 객체
-
-    // 페이징 계산
-    public void calculatePaging(int totalCount) {
-        this.paging = new PagingDTO(page, size, totalCount);
-    }
-
-    // 페이징 정보 반환
-    public PagingDTO getPaging() {
-        return this.paging;
-    }
+    private int page = 1;
+    private int size = 10;
+    private PagingDTO paging;
 }
