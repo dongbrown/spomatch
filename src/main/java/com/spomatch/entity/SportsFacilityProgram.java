@@ -7,11 +7,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "FACILITY_PROGRAM")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class SportsFacilityProgram {
 
@@ -92,10 +94,9 @@ public class SportsFacilityProgram {
     private String programPriceTypeName;          // 프로그램가격유형명
 
     @JsonProperty("HMPG_URL")
-    @Column(name = "HMPG_URL", length = 500)    // URL은 nullable 허용
+    @Column(name = "HMPG_URL", length = 500)
     private String homepageUrl;                   // 홈페이지URL
 
-    // 청소년/유아동 관련 추가 정보
     @JsonProperty("SAFE_MANAGT_CN")
     @Column(name = "SAFE_MANAGT_CN", length = 4000)
     private String safetyManagementContent;       // 안전조치내용
@@ -111,4 +112,32 @@ public class SportsFacilityProgram {
     @JsonProperty("LDR_QUALFC_CN")
     @Column(name = "LDR_QUALFC_CN", length = 1000)
     private String leaderQualificationContent;    // 지도자자격내용
+
+    @Column(name = "view_count")
+    private int viewCount = 0;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProgramLike> likes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProgramRegister> registers = new ArrayList<>();
+
+    // 연관관계 편의 메서드
+    public void addLike(ProgramLike like) {
+        likes.add(like);
+        like.setProgram(this);
+    }
+
+    public void addRegister(ProgramRegister register) {
+        registers.add(register);
+        register.setProgram(this);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

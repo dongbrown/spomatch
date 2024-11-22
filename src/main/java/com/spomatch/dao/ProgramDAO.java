@@ -2,9 +2,13 @@ package com.spomatch.dao;
 
 import com.spomatch.dto.ProgramDTO;
 import com.spomatch.dto.request.ProgramSearchRequestDTO;
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Mapper
+@Repository
 public interface ProgramDAO {
     // 프로그램 목록 조회
     List<ProgramDTO> selectProgramList(ProgramSearchRequestDTO searchDTO);

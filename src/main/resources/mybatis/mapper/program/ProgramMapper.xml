@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.spomatch.dao.ProgramDAO">
+    <!-- 프로그램 목록 조회 -->
+    <select id="selectProgramList" parameterType="ProgramSearchRequestDTO" resultType="ProgramDTO">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, A.* FROM (
+        SELECT
+        FCLTY_NM as facilityName,
+        FCLTY_TY_NM as facilityTypeName,
+        FCLTY_ADDR as facilityAddress,
+        FCLTY_TEL_NO as facilityPhoneNumber,
+        CTPRVN_CD as cityCode,
+        CTPRVN_NM as cityName,
+        SIGNGU_CD as districtCode,
+        SIGNGU_NM as districtName,
+        PROGRM_TY_NM as programTypeName,
+        PROGRM_NM as programName,
+        PROGRM_TRGET_NM as programTargetName,
+        PROGRM_BEGIN_DE as programBeginDate,
+        PROGRM_END_DE as programEndDate,
+        PROGRM_ESTBL_WKDAY_NM as programOperationDays,
+        PROGRM_ESTBL_TIZN_VALUE as programOperationTime,
+        PROGRM_RCRIT_NMPR_CO as programRecruitNumber,
+        PROGRM_PRC as programPrice,
+        PROGRM_PRC_TY_NM as programPriceTypeName,
+        HMPG_URL as homepageUrl,
+        SAFE_MANAGT_CN as safetyManagementContent,
+        EDC_GOAL_CN as educationGoalContent,
+        PRTC_NMPR_PARTCPT_AT as protectorParticipationYn,
+        LDR_QUALFC_CN as leaderQualificationContent
+        FROM FACILITY_PROGRAM
+        WHERE 1=1
+        <if test="cityName != null and cityName != ''">
+            AND CTPRVN_NM = #{cityName}
+        </if>
+        <if test="districtName != null and districtName != ''">
+            AND SIGNGU_NM = #{districtName}
+        </if>
+        <if test="programTargetName != null and programTargetName != ''">
+            AND PROGRM_TRGET_NM = #{programTargetName}
+        </if>
+        <if test="weekdays != null and weekdays.size > 0">
+            AND PROGRM_ESTBL_WKDAY_NM IN
+            <foreach item="day" collection="weekdays" open="(" separator="," close=")">
+                #{day}
+            </foreach>
+        </if>
+        <if test="minPrice != null">
+            AND PROGRM_PRC <![CDATA[>=]]> #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND PROGRM_PRC <![CDATA[<=]]> #{maxPrice}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'deadline'">
+                PROGRM_END_DE ASC
+            </when>
+            <otherwise>
+                PROGRM_BEGIN_DE DESC
+            </otherwise>
+        </choose>
+        ) A WHERE ROWNUM <![CDATA[<=]]> #{paging.end}
+        ) WHERE rnum <![CDATA[>]]> #{paging.start}
+    </select>
+
+    <!-- 프로그램 전체 개수 조회 -->
+    <select id="selectProgramCount" parameterType="ProgramSearchRequestDTO" resultType="int">
+        SELECT COUNT(*)
+        FROM FACILITY_PROGRAM
+        WHERE 1=1
+        <if test="cityName != null and cityName != ''">
+            AND CTPRVN_NM = #{cityName}
+        </if>
+        <if test="districtName != null and districtName != ''">
+            AND SIGNGU_NM = #{districtName}
+        </if>
+        <if test="programTargetName != null and programTargetName != ''">
+            AND PROGRM_TRGET_NM = #{programTargetName}
+        </if>
+        <if test="weekdays != null and weekdays.size > 0">
+            AND PROGRM_ESTBL_WKDAY_NM IN
+            <foreach item="day" collection="weekdays" open="(" separator="," close=")">
+                #{day}
+            </foreach>
+        </if>
+        <if test="minPrice != null">
+            AND PROGRM_PRC <![CDATA[>=]]> #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND PROGRM_PRC <![CDATA[<=]]> #{maxPrice}
+        </if>
+    </select>
+
+    <!-- 프로그램 상세 조회 -->
+    <select id="selectProgramDetail" parameterType="long" resultType="ProgramDTO">
+        SELECT
+            FCLTY_NM as facilityName,
+            FCLTY_TY_NM as facilityTypeName,
+            FCLTY_ADDR as facilityAddress,
+            FCLTY_TEL_NO as facilityPhoneNumber,
+            CTPRVN_CD as cityCode,
+            CTPRVN_NM as cityName,
+            SIGNGU_CD as districtCode,
+            SIGNGU_NM as districtName,
+            PROGRM_TY_NM as programTypeName,
+            PROGRM_NM as programName,
+            PROGRM_TRGET_NM as programTargetName,
+            PROGRM_BEGIN_DE as programBeginDate,
+            PROGRM_END_DE as programEndDate,
+            PROGRM_ESTBL_WKDAY_NM as programOperationDays,
+            PROGRM_ESTBL_TIZN_VALUE as programOperationTime,
+            PROGRM_RCRIT_NMPR_CO as programRecruitNumber,
+            PROGRM_PRC as programPrice,
+            PROGRM_PRC_TY_NM as programPriceTypeName,
+            HMPG_URL as homepageUrl,
+            SAFE_MANAGT_CN as safetyManagementContent,
+            EDC_GOAL_CN as educationGoalContent,
+            PRTC_NMPR_PARTCPT_AT as protectorParticipationYn,
+            LDR_QUALFC_CN as leaderQualificationContent
+        FROM FACILITY_PROGRAM
+        WHERE id = #{programId}
+    </select>
+
+    <!-- 조회수 증가 -->
+    <update id="updateViewCount" parameterType="long">
+        UPDATE FACILITY_PROGRAM
+        SET view_count = view_count + 1
+        WHERE id = #{programId}
+    </update>
+
+    <!-- 찜하기 상태 확인 -->
+    <select id="checkLikeStatus" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM PROGRAM_LIKES
+        WHERE program_id = #{programId}
+          AND user_id = #{userId}
+    </select>
+
+    <!-- 찜하기 추가 -->
+    <insert id="insertProgramLike" parameterType="map">
+        INSERT INTO PROGRAM_LIKES (
+            program_id,
+            user_id,
+            created_at
+        ) VALUES (
+                     #{programId},
+                     #{userId},
+                     SYSDATE
+                 )
+    </insert>
+
+    <!-- 찜하기 삭제 -->
+    <delete id="deleteProgramLike" parameterType="map">
+        DELETE FROM PROGRAM_LIKES
+        WHERE program_id = #{programId}
+          AND user_id = #{userId}
+    </delete>
+
+    <!-- 찜하기 개수 조회 -->
+    <select id="selectLikeCount" parameterType="long" resultType="long">
+        SELECT COUNT(*)
+        FROM PROGRAM_LIKES
+        WHERE program_id = #{programId}
+    </select>
+
+    <!-- 신청 인원 조회 -->
+    <select id="selectRegisterCount" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM PROGRAM_REGISTERS
+        WHERE program_id = #{programId}
+    </select>
+
+    <!-- 추천 프로그램 조회 -->
+    <select id="selectRecommendedPrograms" parameterType="map" resultType="ProgramDTO">
+        SELECT
+            FCLTY_NM as facilityName,
+            FCLTY_TY_NM as facilityTypeName,
+            FCLTY_ADDR as facilityAddress,
+            FCLTY_TEL_NO as facilityPhoneNumber,
+            CTPRVN_CD as cityCode,
+            CTPRVN_NM as cityName,
+            SIGNGU_CD as districtCode,
+            SIGNGU_NM as districtName,
+            PROGRM_TY_NM as programTypeName,
+            PROGRM_NM as programName,
+            PROGRM_TRGET_NM as programTargetName,
+            PROGRM_BEGIN_DE as programBeginDate,
+            PROGRM_END_DE as programEndDate,
+            PROGRM_ESTBL_WKDAY_NM as programOperationDays,
+            PROGRM_ESTBL_TIZN_VALUE as programOperationTime,
+            PROGRM_RCRIT_NMPR_CO as programRecruitNumber,
+            PROGRM_PRC as programPrice,
+            PROGRM_PRC_TY_NM as programPriceTypeName,
+            HMPG_URL as homepageUrl,
+            SAFE_MANAGT_CN as safetyManagementContent,
+            EDC_GOAL_CN as educationGoalContent,
+            PRTC_NMPR_PARTCPT_AT as protectorParticipationYn,
+            LDR_QUALFC_CN as leaderQualificationContent
+        FROM FACILITY_PROGRAM p
+        WHERE EXISTS (
+            SELECT 1
+            FROM PROGRAM_LIKES l
+            WHERE l.user_id = #{userId}
+              AND l.program_id = p.id
+        )
+          AND ROWNUM <![CDATA[<=]]> #{limit}
+        ORDER BY PROGRM_BEGIN_DE DESC
+    </select>
+
+    <!-- 시도 목록 조회 -->
+    <select id="selectCityList" resultType="string">
+        SELECT DISTINCT CTPRVN_NM
+        FROM FACILITY_PROGRAM
+        ORDER BY CTPRVN_NM
+    </select>
+
+    <!-- 시군구 목록 조회 -->
+    <select id="selectDistrictList" resultType="string">
+        SELECT DISTINCT SIGNGU_NM
+        FROM FACILITY_PROGRAM
+        ORDER BY SIGNGU_NM
+    </select>
+
+    <!-- 시설유형 목록 조회 -->
+    <select id="selectFacilityTypeList" resultType="string">
+        SELECT DISTINCT FCLTY_TY_NM
+        FROM FACILITY_PROGRAM
+        ORDER BY FCLTY_TY_NM
+    </select>
+
+    <!-- 프로그램유형 목록 조회 -->
+    <select id="selectProgramTypeList" resultType="string">
+        SELECT DISTINCT PROGRM_TY_NM
+        FROM FACILITY_PROGRAM
+        ORDER BY PROGRM_TY_NM
+    </select>
+
+    <!-- 대상연령 목록 조회 -->
+    <select id="selectTargetAgeList" resultType="string">
+        SELECT DISTINCT PROGRM_TRGET_NM
+        FROM FACILITY_PROGRAM
+        ORDER BY PROGRM_TRGET_NM
+    </select>
+</mapper>

@@ -28,4 +28,8 @@ public class ProgramSearchRequestDTO {
     private int page = 1;
     private int size = 10;
     private PagingDTO paging;
+
+    public void calculatePaging(int totalCount) {
+
+    }
 }
