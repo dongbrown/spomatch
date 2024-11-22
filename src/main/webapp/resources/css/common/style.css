@@ -1,0 +1,132 @@
+
+/* Main Visual */
+.main-visual {
+    height: 100vh;
+    background-position: center;
+    background-size: cover;
+    position: relative;
+}
+.main-visual::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+}
+
+/* Menu Hover */
+.menu-hover:hover {
+    color: #4A90E2;
+}
+
+/* Calendar */
+.calendar-cell {
+    width: 14.28%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Photo Gallery */
+.photo-gallery img {
+    transition: transform 0.3s ease;
+}
+.photo-gallery img:hover {
+    transform: scale(1.05);
+}
+
+/* Header */
+header {
+    position: fixed;
+    width: 100%;
+    z-index: 50;
+    background-color: white;
+    background-opacity: 0.9;
+}
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+}
+header .logo {
+    display: flex;
+    align-items: center;
+}
+header .logo img {
+    height: 32px;
+}
+header .logo span {
+    margin-left: 8px;
+    font-size: 20px;
+    font-weight: bold;
+}
+header nav {
+    display: none;
+    margin-left: 32px;
+}
+@media (min-width: 768px) {
+    header nav {
+        display: flex;
+        space-x: 32px;
+    }
+}
+header .contact {
+    display: flex;
+    align-items: center;
+    color: #6B7280;
+}
+
+/* Footer */
+footer {
+    background-color: #18171F;
+    color: #9CA3AF;
+    padding-top: 48px;
+    padding-bottom: 48px;
+}
+footer .container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+footer .left {
+    width: 100%;
+    margin-bottom: 32px;
+}
+@media (min-width: 768px) {
+    footer .left {
+        width: 50%;
+        margin-bottom: 0;
+    }
+}
+footer .left img {
+    height: 32px;
+    margin-bottom: 16px;
+}
+footer .left p {
+    margin-bottom: 8px;
+}
+footer .right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+@media (min-width: 768px) {
+    footer .right {
+        width: 50%;
+    }
+}
+footer .right img {
+    height: 40px;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+footer .copyright {
+    border-top: 1px solid #374151;
+    margin-top: 32px;
+    padding-top: 32px;
+    text-align: center;
+}

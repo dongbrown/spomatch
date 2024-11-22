@@ -1,6 +1,5 @@
 package com.spomatch.service;
 
-import aj.org.objectweb.asm.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spomatch.dao.ProgramDAO;
 import com.spomatch.dto.ProgramDTO;
@@ -20,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,12 +26,9 @@ public class ProgramServiceImpl implements ProgramService {
 
     private final EntityManager entityManager;
     private final ObjectMapper objectMapper;
+    private final ProgramDAO programDAO;
 
     private double currentProgress = 0.0;
-
-    private final ProgramDAO programDAO;
-//    private final LocationService locationService;
-//    private final ReviewService reviewService;
 
     @Override
     @Transactional
@@ -64,25 +59,12 @@ public class ProgramServiceImpl implements ProgramService {
             throw new RuntimeException("프로그램을 찾을 수 없습니다.");
         }
 
-//        // 위치 정보 조회
-//        ProgramDetailResponseDTO.LocationInfo locationInfo =
-//                locationService.getLocationInfo(program.getFacilityId());
-//
-//        // 리뷰 정보 조회
-//        List<ProgramDetailResponseDTO.ReviewInfo> reviews =
-//                reviewService.getProgramReviews(programId);
-
-        // 통계 정보 조회
-//        ProgramDetailResponseDTO.StatisticsInfo statistics =
-//                getStatisticsInfo(programId);
-
         // DetailResponse 생성
         return ProgramDetailResponseDTO.builder()
                 .id(program.getId())
-                .name(program.getName())
+                .programName(program.getProgramName())
                 .facility(getFacilityInfo(program))
                 .classInfo(getClassInfo(program))
-//                .statistics(statistics)
                 .build();
     }
 
@@ -95,7 +77,6 @@ public class ProgramServiceImpl implements ProgramService {
     @Override
     @Transactional
     public boolean toggleLikeProgram(Long programId, String userId) {
-        // 이미 찜한 상태인지 확인
         boolean isLiked = programDAO.checkLikeStatus(programId, userId);
 
         if (isLiked) {
@@ -114,15 +95,13 @@ public class ProgramServiceImpl implements ProgramService {
         if (program == null) {
             return false;
         }
-        return program.getCurrentParticipants() < program.getMaxParticipants();
+        return program.getProgramRecruitNumber() > 0;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProgramListResponseDTO getRecommendedPrograms(String userId, int limit) {
-        List<ProgramDTO> recommendedPrograms =
-                programDAO.selectRecommendedPrograms(userId, limit);
-
+        List<ProgramDTO> recommendedPrograms = programDAO.selectRecommendedPrograms(userId, limit);
         return ProgramListResponseDTO.builder()
                 .programs(recommendedPrograms)
                 .build();
@@ -131,53 +110,50 @@ public class ProgramServiceImpl implements ProgramService {
     // 필터 옵션 조회
     private Map<String, Object> getFilterOptions() {
         Map<String, Object> filters = new HashMap<>();
-        filters.put("regions", programDAO.selectRegionList());
-        filters.put("sportTypes", programDAO.selectSportTypeList());
-        filters.put("ageTypes", programDAO.selectAgeTypeList());
+        filters.put("cities", programDAO.selectCityList());         // 시도 목록
+        filters.put("districts", programDAO.selectDistrictList());  // 시군구 목록
+        filters.put("facilityTypes", programDAO.selectFacilityTypeList()); // 시설유형 목록
+        filters.put("programTypes", programDAO.selectProgramTypeList());   // 프로그램유형 목록
+        filters.put("targetAges", programDAO.selectTargetAgeList());      // 대상연령 목록
         return filters;
     }
 
-    // 상세 정보 변환 메서드들
+    // 시설 정보 변환
     private ProgramDetailResponseDTO.FacilityInfo getFacilityInfo(ProgramDTO program) {
         return ProgramDetailResponseDTO.FacilityInfo.builder()
-                .facilityName(program.getFacility())
-//                .facilityType(program.getFacilityType())
-//                .contact(program.getContact())
-//                .homepage(program.getHomepage())
+                .facilityName(program.getFacilityName())
+                .facilityType(program.getFacilityTypeName())
+                .address(program.getFacilityAddress())
+                .contact(program.getFacilityPhoneNumber())
+                .homepage(program.getHomepageUrl())
+                .safetyManagement(program.getSafetyManagementContent())
                 .build();
     }
 
+    // 수업 정보 변환
     private ProgramDetailResponseDTO.ClassInfo getClassInfo(ProgramDTO program) {
         return ProgramDetailResponseDTO.ClassInfo.builder()
-                .sportType(program.getSportType())
-                .ageType(program.getAgeType())
-                .weekdays(program.getWeekdays())
-                .time(program.getTime())
-                .startDate(program.getStartDate())
-                .endDate(program.getEndDate())
-                .price(program.getPrice())
-                .currentParticipants(program.getCurrentParticipants())
-                .maxParticipants(program.getMaxParticipants())
+                .programType(program.getProgramTypeName())
+                .programName(program.getProgramName())
+                .targetName(program.getProgramTargetName())
+                .weekdays(List.of(program.getProgramOperationDays().split(",")))
+                .time(program.getProgramOperationTime())
+                .startDate(program.getProgramBeginDate())
+                .endDate(program.getProgramEndDate())
+                .price(program.getProgramPrice())
+                .priceType(program.getProgramPriceTypeName())
+                .recruitNumber(program.getProgramRecruitNumber())
+                .educationGoal(program.getEducationGoalContent())
+                .leaderQualification(program.getLeaderQualificationContent())
+                .protectorParticipation(program.getProtectorParticipationYn())
                 .build();
     }
-
-//    private ProgramDetailResponseDTO.StatisticsInfo getStatisticsInfo(Long programId) {
-//        return ProgramDetailResponseDTO.StatisticsInfo.builder()
-//                .viewCount(programDAO.selectViewCount(programId))
-//                .likeCount(programDAO.selectLikeCount(programId))
-//                .rating(reviewService.getAverageRating(programId))
-//                .reviewCount(reviewService.getReviewCount(programId))
-//                .registerCount(programDAO.selectRegisterCount(programId))
-//                .build();
-//    }
-
 
     @Override
     @Transactional
     public void importJsonData(String filePath) {
         try {
             File file = new File(filePath);
-
             List<SportsFacilityProgram> programs = Arrays.asList(
                     objectMapper.readValue(file, SportsFacilityProgram[].class));
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- 카멜케이스 설정 -->
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <setting name="jdbcTypeForNull" value="NULL"/>
+        <setting name="callSettersOnNulls" value="true"/>
+        <setting name="useGeneratedKeys" value="true"/>
+    </settings>
+
+    <!-- 타입 별칭 -->
+    <typeAliases>
+        <typeAlias type="com.spomatch.dto.ProgramDTO" alias="ProgramDTO"/>
+        <typeAlias type="com.spomatch.dto.request.ProgramSearchRequestDTO" alias="ProgramSearchRequestDTO"/>
+        <typeAlias type="com.spomatch.dto.response.ProgramDetailResponseDTO" alias="ProgramDetailResponseDTO"/>
+    </typeAliases>
+</configuration>

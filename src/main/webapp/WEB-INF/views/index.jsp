@@ -1,3 +1,5 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -40,32 +42,8 @@
     </style>
 </head>
 <body>
-<!-- 헤더 -->
-<header class="fixed w-full z-50 bg-white bg-opacity-90">
-    <div class="container mx-auto px-4">
-        <div class="flex justify-between items-center h-20">
-            <a href="/" class="flex items-center">
-                <img src="/api/placeholder/40/40" alt="SAMPLE" class="h-8">
-                <span class="ml-2 text-xl font-bold">SAMPLE</span>
-            </a>
+<c:import url="/WEB-INF/views/common/header.jsp" />
 
-            <nav class="hidden md:flex space-x-8">
-                <a href="#" class="menu-hover">회사소개</a>
-                <a href="/program/list" class="menu-hover">체육 프로그램</a>
-                <a href="#" class="menu-hover">참여마당</a>
-                <a href="#" class="menu-hover">알림마당</a>
-                <a href="#" class="menu-hover">자료실</a>
-            </nav>
-
-            <!-- 로그인/ 회원가입 -->
-            <div class="flex items-center space-x-4">
-                <a href="/login" class="text-gray-600 hover:text-blue-600">로그인</a>
-                <span class="text-gray-300">|</span>
-                <a href="/register" class="text-gray-600 hover:text-blue-600">회원가입</a>
-            </div>
-        </div>
-    </div>
-</header>
 
 <!-- 메인 비주얼 -->
 <section class="main-visual relative">
@@ -176,25 +154,6 @@
     </div>
 </section>
 
-<!-- 푸터 -->
-<footer class="bg-gray-900 text-gray-400 py-12">
-    <div class="container mx-auto px-4">
-        <div class="flex flex-wrap justify-between">
-            <div class="w-full md:w-1/2 mb-8 md:mb-0">
-                <img src="/api/placeholder/40/40" alt="SAMPLE" class="h-8 mb-4">
-                <p class="mb-2">서울특별시 강남구 삼성로 123</p>
-                <p>TEL: 1234-5678 FAX: 1234-5679</p>
-            </div>
-            <div class="w-full md:w-1/2 flex justify-end">
-                <img src="/api/placeholder/120/40" alt="협력기관1" class="h-10 mx-2">
-                <img src="/api/placeholder/120/40" alt="협력기관2" class="h-10 mx-2">
-                <img src="/api/placeholder/120/40" alt="협력기관3" class="h-10 mx-2">
-            </div>
-        </div>
-        <div class="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p>Copyright © SAMPLE All rights reserved.</p>
-        </div>
-    </div>
-</footer>
+<c:import url="/WEB-INF/views/common/footer.jsp" />
 </body>
 </html>
