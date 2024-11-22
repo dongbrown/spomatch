@@ -1,7 +1,7 @@
 package com.spomatch.entity;
 
-import com.spomatch.common.enums.MemberStatus;
-import com.spomatch.common.enums.Role;
+import com.spomatch.common.enums.member.MemberStatus;
+import com.spomatch.common.enums.member.Role;
 import com.spomatch.common.enums.member.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 
@@ -19,7 +20,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class Member {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MEMBER_ID", updatable = false)
     private Long id;
 
@@ -53,4 +54,8 @@ public class Member {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
+
+    public void encodePassword(PasswordEncoder passwordEncoder) {
+        this.password = passwordEncoder.encode(this.password);
+    }
 }
