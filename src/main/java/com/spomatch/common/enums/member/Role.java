@@ -1,4 +1,4 @@
-package com.spomatch.common.enums;
+package com.spomatch.common.enums.member;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
