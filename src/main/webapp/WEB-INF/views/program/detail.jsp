@@ -6,17 +6,23 @@
     <meta charset="UTF-8">
     <title>${program.programName}</title>
     <!-- CSS -->
-    <link rel="stylesheet" href="/resources/css/common.css">
+    <link rel="stylesheet" href="/resources/css/common/style.css">
+    <link rel="stylesheet" href="/resources/css/program/common.css">
     <link rel="stylesheet" href="/resources/css/program/detail.css">
-    <!-- jQuery -->
+    <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
 </head>
 <body>
+<c:import url="/WEB-INF/views/common/header.jsp" />
 <div class="container">
     <div class="program-detail">
         <!-- 프로그램 기본 정보 -->
         <div class="program-header">
             <h1>${program.programName}</h1>
+            <div class="program-image">
+                <img src="/resources/images/program/${program.id}.jpg" alt="${program.programName}">
+            </div>
             <div class="facility-info">
                 <h3>${program.facility.facilityName}</h3>
                 <p>${program.facility.facilityType}</p>
@@ -32,7 +38,7 @@
         <div class="program-info">
             <div class="info-group">
                 <h3>프로그램 정보</h3>
-                <p>대상: ${program.classInfo.targetAge}</p>
+                <p>대상: ${program.classInfo.targetName}</p>
                 <p>요일: ${program.classInfo.weekdays}</p>
                 <p>시간: ${program.classInfo.time}</p>
                 <p>기간: ${program.classInfo.startDate} ~ ${program.classInfo.endDate}</p>
@@ -53,6 +59,11 @@
                     <p>${program.facility.safetyManagement}</p>
                 </div>
             </c:if>
+
+            <div class="info-group">
+                <h3>시설 위치</h3>
+                <div id="map" style="height: 400px;"></div>
+            </div>
         </div>
 
         <!-- 버튼 영역 -->
@@ -66,8 +77,16 @@
     </div>
 </div>
 
-<!-- JavaScript -->
+<c:import url="/WEB-INF/views/common/footer.jsp" />
+
 <script src="/resources/js/common.js"></script>
 <script src="/resources/js/program/detail.js"></script>
+<script>
+    function initMap() {
+        const mapContainer = document.getElementById('map');
+    }
+
+    initMap();
+</script>
 </body>
 </html>

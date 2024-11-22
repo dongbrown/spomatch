@@ -45,6 +45,57 @@
         <if test="programTargetName != null and programTargetName != ''">
             AND progrm_trget_nm = #{programTargetName}
         </if>
+        <if test="events != null and events.size > 0">
+            AND (
+            <foreach item="event" collection="events" separator=" OR ">
+                <choose>
+                    <when test="event == '수영'">
+                        progrm_nm LIKE '%수영%'
+                    </when>
+                    <when test="event == '골프'">
+                        progrm_nm LIKE '%골프%'
+                    </when>
+                    <when test="event == '탁구'">
+                        progrm_nm LIKE '%탁구%'
+                    </when>
+                    <when test="event == '배드민턴'">
+                        progrm_nm LIKE '%배드민턴%'
+                    </when>
+                    <when test="event == '댄스'">
+                        (progrm_nm LIKE '%댄스%' OR progrm_nm LIKE '%춤%')
+                    </when>
+                    <when test="event == '필라테스'">
+                        progrm_nm LIKE '%필라테스%'
+                    </when>
+                    <when test="event == '헬스'">
+                        (progrm_nm LIKE '%헬스%' OR progrm_nm LIKE '%피트니스%')
+                    </when>
+                    <when test="event == '테니스'">
+                        progrm_nm LIKE '%테니스%'
+                    </when>
+                    <when test="event == '에어로빅'">
+                        progrm_nm LIKE '%에어로빅%'
+                    </when>
+                    <when test="event == '축구'">
+                        (program_nm LIKE '%축구%' OR program_nm LIKE '%풋살%')
+                    </when>
+                    <when test="event == '기타'">
+                        progrm_nm NOT LIKE '%수영%'
+                        AND progrm_nm NOT LIKE '%골프%'
+                        AND progrm_nm NOT LIKE '%탁구%'
+                        AND progrm_nm NOT LIKE '%배드민턴%'
+                        AND progrm_nm NOT LIKE '%댄스%'
+                        AND progrm_nm NOT LIKE '%춤%'
+                        AND progrm_nm NOT LIKE '%필라테스%'
+                        AND progrm_nm NOT LIKE '%헬스%'
+                        AND progrm_nm NOT LIKE '%피트니스%'
+                        AND progrm_nm NOT LIKE '%테니스%'
+                        AND progrm_nm NOT LIKE '%에어로빅%'
+                    </when>
+                </choose>
+            </foreach>
+            )
+        </if>
         <if test="weekdays != null and weekdays.size > 0">
             AND progrm_estbl_wkday_nm IN
             <foreach item="day" collection="weekdays" open="(" separator="," close=")">

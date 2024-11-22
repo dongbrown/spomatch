@@ -16,6 +16,7 @@ public class ProgramSearchRequestDTO {
     private Integer minPrice;
     private Integer maxPrice;
     private String sortBy = "latest";  // 기본값
+    private List<String> events; //종목
 
     // 페이징 관련 필드
     private int page = 1;            // 기본값 1페이지

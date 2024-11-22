@@ -62,7 +62,7 @@ public class ProgramServiceImpl implements ProgramService {
         // DetailResponse 생성
         return ProgramDetailResponseDTO.builder()
                 .id(program.getId())
-                .name(program.getProgramName())
+                .programName(program.getProgramName())
                 .facility(getFacilityInfo(program))
                 .classInfo(getClassInfo(program))
                 .build();
@@ -135,7 +135,7 @@ public class ProgramServiceImpl implements ProgramService {
         return ProgramDetailResponseDTO.ClassInfo.builder()
                 .programType(program.getProgramTypeName())
                 .programName(program.getProgramName())
-                .targetAge(program.getProgramTargetName())
+                .targetName(program.getProgramTargetName())
                 .weekdays(List.of(program.getProgramOperationDays().split(",")))
                 .time(program.getProgramOperationTime())
                 .startDate(program.getProgramBeginDate())

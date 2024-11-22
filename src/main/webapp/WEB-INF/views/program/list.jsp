@@ -6,12 +6,14 @@
     <meta charset="UTF-8">
     <title>프로그램 목록</title>
     <!-- CSS -->
-    <link rel="stylesheet" href="/resources/css/common.css">
-    <link rel="stylesheet" href="/resources/css/program/program.css">
+    <link rel="stylesheet" href="/resources/css/common/style.css">
+    <link rel="stylesheet" href="/resources/css/program/common.css">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+<c:import url="/WEB-INF/views/common/header.jsp" />
+
 <div class="container">
     <!-- 검색 필터 영역 -->
     <div class="search-filter">
@@ -37,6 +39,21 @@
                     <option value="성인">성인</option>
                     <option value="노인">노인</option>
                 </select>
+            </div>
+
+            <!-- 종목 선택 -->
+            <div class="filter-group">
+                <label>종목</label>
+                <input type="checkbox" name="events" value="수영"> 수영
+                <input type="checkbox" name="events" value="골프"> 골프
+                <input type="checkbox" name="events" value="탁구"> 탁구
+                <input type="checkbox" name="events" value="배드민턴"> 배드민턴
+                <input type="checkbox" name="events" value="댄스"> 댄스
+                <input type="checkbox" name="events" value="필라테스"> 필라테스
+                <input type="checkbox" name="events" value="헬스"> 헬스
+                <input type="checkbox" name="events" value="테니스"> 테니스
+                <input type="checkbox" name="events" value="에어로빅"> 에어로빅
+                <input type="checkbox" name="events" value="기타"> 기타
             </div>
 
             <!-- 요일 선택 -->
@@ -107,6 +124,7 @@
         </c:if>
     </div>
 </div>
+<c:import url="/WEB-INF/views/common/footer.jsp" />
 
 <!-- JavaScript -->
 <script src="/resources/js/common.js"></script>
