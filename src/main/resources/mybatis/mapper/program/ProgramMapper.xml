@@ -8,63 +8,58 @@
         SELECT * FROM (
         SELECT ROWNUM AS rnum, A.* FROM (
         SELECT
-        FCLTY_NM as facilityName,
-        FCLTY_TY_NM as facilityTypeName,
-        FCLTY_ADDR as facilityAddress,
-        FCLTY_TEL_NO as facilityPhoneNumber,
-        CTPRVN_CD as cityCode,
-        CTPRVN_NM as cityName,
-        SIGNGU_CD as districtCode,
-        SIGNGU_NM as districtName,
-        PROGRM_TY_NM as programTypeName,
-        PROGRM_NM as programName,
-        PROGRM_TRGET_NM as programTargetName,
-        PROGRM_BEGIN_DE as programBeginDate,
-        PROGRM_END_DE as programEndDate,
-        PROGRM_ESTBL_WKDAY_NM as programOperationDays,
-        PROGRM_ESTBL_TIZN_VALUE as programOperationTime,
-        PROGRM_RCRIT_NMPR_CO as programRecruitNumber,
-        PROGRM_PRC as programPrice,
-        PROGRM_PRC_TY_NM as programPriceTypeName,
-        HMPG_URL as homepageUrl,
-        SAFE_MANAGT_CN as safetyManagementContent,
-        EDC_GOAL_CN as educationGoalContent,
-        PRTC_NMPR_PARTCPT_AT as protectorParticipationYn,
-        LDR_QUALFC_CN as leaderQualificationContent
+        id,
+        ctprvn_cd as cityCode,
+        ctprvn_nm as cityName,
+        signgu_cd as districtCode,
+        signgu_nm as districtName,
+        edc_goal_cn as educationGoalContent,
+        fclty_addr as facilityAddress,
+        fclty_nm as facilityName,
+        fclty_tel_no as facilityPhoneNumber,
+        fclty_ty_nm as facilityTypeName,
+        hmpg_url as homepageUrl,
+        ldr_qualfc_cn as leaderQualificationContent,
+        progrm_begin_de as programBeginDate,
+        progrm_end_de as programEndDate,
+        progrm_nm as programName,
+        progrm_estbl_wkday_nm as programOperationDays,
+        progrm_estbl_tizn_value as programOperationTime,
+        progrm_prc as programPrice,
+        progrm_prc_ty_nm as programPriceTypeName,
+        progrm_rcrit_nmpr_co as programRecruitNumber,
+        progrm_trget_nm as programTargetName,
+        progrm_ty_nm as programTypeName,
+        prtc_nmpr_partcpt_at as protectorParticipationYn,
+        safe_managt_cn as safetyManagementContent,
+        view_count as viewCount,
+        created_at as createdAt
         FROM FACILITY_PROGRAM
         WHERE 1=1
         <if test="cityName != null and cityName != ''">
-            AND CTPRVN_NM = #{cityName}
+            AND ctprvn_nm = #{cityName}
         </if>
         <if test="districtName != null and districtName != ''">
-            AND SIGNGU_NM = #{districtName}
+            AND signgu_nm = #{districtName}
         </if>
         <if test="programTargetName != null and programTargetName != ''">
-            AND PROGRM_TRGET_NM = #{programTargetName}
+            AND progrm_trget_nm = #{programTargetName}
         </if>
         <if test="weekdays != null and weekdays.size > 0">
-            AND PROGRM_ESTBL_WKDAY_NM IN
+            AND progrm_estbl_wkday_nm IN
             <foreach item="day" collection="weekdays" open="(" separator="," close=")">
                 #{day}
             </foreach>
         </if>
         <if test="minPrice != null">
-            AND PROGRM_PRC <![CDATA[>=]]> #{minPrice}
+            AND progrm_prc <![CDATA[>=]]> #{minPrice}
         </if>
         <if test="maxPrice != null">
-            AND PROGRM_PRC <![CDATA[<=]]> #{maxPrice}
+            AND progrm_prc <![CDATA[<=]]> #{maxPrice}
         </if>
-        ORDER BY
-        <choose>
-            <when test="sortBy == 'deadline'">
-                PROGRM_END_DE ASC
-            </when>
-            <otherwise>
-                PROGRM_BEGIN_DE DESC
-            </otherwise>
-        </choose>
-        ) A WHERE ROWNUM <![CDATA[<=]]> #{paging.end}
-        ) WHERE rnum <![CDATA[>]]> #{paging.start}
+        ORDER BY created_at DESC
+        ) A WHERE ROWNUM <![CDATA[<=]]> #{end}
+        ) WHERE rnum > #{start}
     </select>
 
     <!-- 프로그램 전체 개수 조회 -->
@@ -73,54 +68,57 @@
         FROM FACILITY_PROGRAM
         WHERE 1=1
         <if test="cityName != null and cityName != ''">
-            AND CTPRVN_NM = #{cityName}
+            AND ctprvn_nm = #{cityName}
         </if>
         <if test="districtName != null and districtName != ''">
-            AND SIGNGU_NM = #{districtName}
+            AND signgu_nm = #{districtName}
         </if>
         <if test="programTargetName != null and programTargetName != ''">
-            AND PROGRM_TRGET_NM = #{programTargetName}
+            AND progrm_trget_nm = #{programTargetName}
         </if>
         <if test="weekdays != null and weekdays.size > 0">
-            AND PROGRM_ESTBL_WKDAY_NM IN
+            AND progrm_estbl_wkday_nm IN
             <foreach item="day" collection="weekdays" open="(" separator="," close=")">
                 #{day}
             </foreach>
         </if>
         <if test="minPrice != null">
-            AND PROGRM_PRC <![CDATA[>=]]> #{minPrice}
+            AND progrm_prc <![CDATA[>=]]> #{minPrice}
         </if>
         <if test="maxPrice != null">
-            AND PROGRM_PRC <![CDATA[<=]]> #{maxPrice}
+            AND progrm_prc <![CDATA[<=]]> #{maxPrice}
         </if>
     </select>
 
     <!-- 프로그램 상세 조회 -->
     <select id="selectProgramDetail" parameterType="long" resultType="ProgramDTO">
         SELECT
-            FCLTY_NM as facilityName,
-            FCLTY_TY_NM as facilityTypeName,
-            FCLTY_ADDR as facilityAddress,
-            FCLTY_TEL_NO as facilityPhoneNumber,
-            CTPRVN_CD as cityCode,
-            CTPRVN_NM as cityName,
-            SIGNGU_CD as districtCode,
-            SIGNGU_NM as districtName,
-            PROGRM_TY_NM as programTypeName,
-            PROGRM_NM as programName,
-            PROGRM_TRGET_NM as programTargetName,
-            PROGRM_BEGIN_DE as programBeginDate,
-            PROGRM_END_DE as programEndDate,
-            PROGRM_ESTBL_WKDAY_NM as programOperationDays,
-            PROGRM_ESTBL_TIZN_VALUE as programOperationTime,
-            PROGRM_RCRIT_NMPR_CO as programRecruitNumber,
-            PROGRM_PRC as programPrice,
-            PROGRM_PRC_TY_NM as programPriceTypeName,
-            HMPG_URL as homepageUrl,
-            SAFE_MANAGT_CN as safetyManagementContent,
-            EDC_GOAL_CN as educationGoalContent,
-            PRTC_NMPR_PARTCPT_AT as protectorParticipationYn,
-            LDR_QUALFC_CN as leaderQualificationContent
+            id,
+            ctprvn_cd as cityCode,
+            ctprvn_nm as cityName,
+            signgu_cd as districtCode,
+            signgu_nm as districtName,
+            edc_goal_cn as educationGoalContent,
+            fclty_addr as facilityAddress,
+            fclty_nm as facilityName,
+            fclty_tel_no as facilityPhoneNumber,
+            fclty_ty_nm as facilityTypeName,
+            hmpg_url as homepageUrl,
+            ldr_qualfc_cn as leaderQualificationContent,
+            progrm_begin_de as programBeginDate,
+            progrm_end_de as programEndDate,
+            progrm_nm as programName,
+            progrm_estbl_wkday_nm as programOperationDays,
+            progrm_estbl_tizn_value as programOperationTime,
+            progrm_prc as programPrice,
+            progrm_prc_ty_nm as programPriceTypeName,
+            progrm_rcrit_nmpr_co as programRecruitNumber,
+            progrm_trget_nm as programTargetName,
+            progrm_ty_nm as programTypeName,
+            prtc_nmpr_partcpt_at as protectorParticipationYn,
+            safe_managt_cn as safetyManagementContent,
+            view_count as viewCount,
+            created_at as createdAt
         FROM FACILITY_PROGRAM
         WHERE id = #{programId}
     </select>
@@ -177,29 +175,32 @@
     <!-- 추천 프로그램 조회 -->
     <select id="selectRecommendedPrograms" parameterType="map" resultType="ProgramDTO">
         SELECT
-            FCLTY_NM as facilityName,
-            FCLTY_TY_NM as facilityTypeName,
-            FCLTY_ADDR as facilityAddress,
-            FCLTY_TEL_NO as facilityPhoneNumber,
-            CTPRVN_CD as cityCode,
-            CTPRVN_NM as cityName,
-            SIGNGU_CD as districtCode,
-            SIGNGU_NM as districtName,
-            PROGRM_TY_NM as programTypeName,
-            PROGRM_NM as programName,
-            PROGRM_TRGET_NM as programTargetName,
-            PROGRM_BEGIN_DE as programBeginDate,
-            PROGRM_END_DE as programEndDate,
-            PROGRM_ESTBL_WKDAY_NM as programOperationDays,
-            PROGRM_ESTBL_TIZN_VALUE as programOperationTime,
-            PROGRM_RCRIT_NMPR_CO as programRecruitNumber,
-            PROGRM_PRC as programPrice,
-            PROGRM_PRC_TY_NM as programPriceTypeName,
-            HMPG_URL as homepageUrl,
-            SAFE_MANAGT_CN as safetyManagementContent,
-            EDC_GOAL_CN as educationGoalContent,
-            PRTC_NMPR_PARTCPT_AT as protectorParticipationYn,
-            LDR_QUALFC_CN as leaderQualificationContent
+            id,
+            ctprvn_cd as cityCode,
+            ctprvn_nm as cityName,
+            signgu_cd as districtCode,
+            signgu_nm as districtName,
+            edc_goal_cn as educationGoalContent,
+            fclty_addr as facilityAddress,
+            fclty_nm as facilityName,
+            fclty_tel_no as facilityPhoneNumber,
+            fclty_ty_nm as facilityTypeName,
+            hmpg_url as homepageUrl,
+            ldr_qualfc_cn as leaderQualificationContent,
+            progrm_begin_de as programBeginDate,
+            progrm_end_de as programEndDate,
+            progrm_nm as programName,
+            progrm_estbl_wkday_nm as programOperationDays,
+            progrm_estbl_tizn_value as programOperationTime,
+            progrm_prc as programPrice,
+            progrm_prc_ty_nm as programPriceTypeName,
+            progrm_rcrit_nmpr_co as programRecruitNumber,
+            progrm_trget_nm as programTargetName,
+            progrm_ty_nm as programTypeName,
+            prtc_nmpr_partcpt_at as protectorParticipationYn,
+            safe_managt_cn as safetyManagementContent,
+            view_count as viewCount,
+            created_at as createdAt
         FROM FACILITY_PROGRAM p
         WHERE EXISTS (
             SELECT 1
@@ -208,41 +209,41 @@
               AND l.program_id = p.id
         )
           AND ROWNUM <![CDATA[<=]]> #{limit}
-        ORDER BY PROGRM_BEGIN_DE DESC
+        ORDER BY created_at DESC
     </select>
 
     <!-- 시도 목록 조회 -->
     <select id="selectCityList" resultType="string">
-        SELECT DISTINCT CTPRVN_NM
+        SELECT DISTINCT ctprvn_nm
         FROM FACILITY_PROGRAM
-        ORDER BY CTPRVN_NM
+        ORDER BY ctprvn_nm
     </select>
 
     <!-- 시군구 목록 조회 -->
     <select id="selectDistrictList" resultType="string">
-        SELECT DISTINCT SIGNGU_NM
+        SELECT DISTINCT signgu_nm
         FROM FACILITY_PROGRAM
-        ORDER BY SIGNGU_NM
+        ORDER BY signgu_nm
     </select>
 
     <!-- 시설유형 목록 조회 -->
     <select id="selectFacilityTypeList" resultType="string">
-        SELECT DISTINCT FCLTY_TY_NM
+        SELECT DISTINCT fclty_ty_nm
         FROM FACILITY_PROGRAM
-        ORDER BY FCLTY_TY_NM
+        ORDER BY fclty_ty_nm
     </select>
 
     <!-- 프로그램유형 목록 조회 -->
     <select id="selectProgramTypeList" resultType="string">
-        SELECT DISTINCT PROGRM_TY_NM
+        SELECT DISTINCT progrm_ty_nm
         FROM FACILITY_PROGRAM
-        ORDER BY PROGRM_TY_NM
+        ORDER BY progrm_ty_nm
     </select>
 
     <!-- 대상연령 목록 조회 -->
     <select id="selectTargetAgeList" resultType="string">
-        SELECT DISTINCT PROGRM_TRGET_NM
+        SELECT DISTINCT progrm_trget_nm
         FROM FACILITY_PROGRAM
-        ORDER BY PROGRM_TRGET_NM
+        ORDER BY progrm_trget_nm
     </select>
 </mapper>

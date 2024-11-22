@@ -91,18 +91,19 @@
     </div>
 
     <!-- 페이징 -->
+    <!-- 페이징 -->
     <div class="pagination">
         <c:if test="${result.paging.hasPrevious}">
-            <a href="#" class="page-link" data-page="${result.paging.previousPageBlock}">&laquo;</a>
+            <a href="#" class="page-link" data-page="${result.paging.startPage - 1}">&laquo;</a>
         </c:if>
 
         <c:forEach begin="${result.paging.startPage}" end="${result.paging.endPage}" var="pageNum">
-            <a href="#" class="page-link ${pageNum == result.paging.page ? 'active' : ''}"
+            <a href="#" class="page-link ${pageNum == result.paging.currentPage ? 'active' : ''}"
                data-page="${pageNum}">${pageNum}</a>
         </c:forEach>
 
         <c:if test="${result.paging.hasNext}">
-            <a href="#" class="page-link" data-page="${result.paging.nextPageBlock}">&raquo;</a>
+            <a href="#" class="page-link" data-page="${result.paging.endPage + 1}">&raquo;</a>
         </c:if>
     </div>
 </div>
