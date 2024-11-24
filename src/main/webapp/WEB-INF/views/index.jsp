@@ -47,11 +47,11 @@
 
 <!-- 메인 비주얼 -->
 <section class="main-visual relative">
-    <img src="/api/placeholder/1920/1080" alt="메인 비주얼" class="w-full h-full object-cover">
+    <img src="/api/placeholder/1920/1080" alt="" class="w-full h-full object-cover">
     <div class="absolute inset-0 z-10 flex items-center px-4">
         <div class="container mx-auto text-white">
             <h1 class="text-5xl font-bold mb-4">
-                샘플체육회와 함께하는<br>
+                스포매치와 함께하는<br>
                 건강한 내일
             </h1>
             <p class="text-lg opacity-80 mb-8">
