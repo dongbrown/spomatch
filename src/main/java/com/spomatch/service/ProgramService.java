@@ -16,7 +16,7 @@ public interface ProgramService {
     void increaseViewCount(Long programId);
 
     // 찜하기 토글
-    boolean toggleLikeProgram(Long programId, String userId);
+    boolean toggleLikeProgram(Long programId, Long userId);
 
     // 프로그램 신청 가능 여부 확인
     boolean checkProgramAvailability(Long programId);

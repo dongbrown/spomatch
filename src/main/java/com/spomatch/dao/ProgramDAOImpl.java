@@ -39,7 +39,7 @@ public class ProgramDAOImpl implements ProgramDAO {
     }
 
     @Override
-    public boolean checkLikeStatus(Long programId, String userId) {
+    public boolean checkLikeStatus(Long programId, Long userId) {
         Map<String, Object> params = Map.of(
                 "programId", programId,
                 "userId", userId
@@ -49,7 +49,7 @@ public class ProgramDAOImpl implements ProgramDAO {
     }
 
     @Override
-    public void insertProgramLike(Long programId, String userId) {
+    public void insertProgramLike(Long programId, Long userId) {
         Map<String, Object> params = Map.of(
                 "programId", programId,
                 "userId", userId
@@ -58,7 +58,7 @@ public class ProgramDAOImpl implements ProgramDAO {
     }
 
     @Override
-    public void deleteProgramLike(Long programId, String userId) {
+    public void deleteProgramLike(Long programId, Long userId) {
         Map<String, Object> params = Map.of(
                 "programId", programId,
                 "userId", userId

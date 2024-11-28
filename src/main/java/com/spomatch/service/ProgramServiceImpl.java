@@ -76,7 +76,7 @@ public class ProgramServiceImpl implements ProgramService {
 
     @Override
     @Transactional
-    public boolean toggleLikeProgram(Long programId, String userId) {
+    public boolean toggleLikeProgram(Long programId, Long userId) {
         boolean isLiked = programDAO.checkLikeStatus(programId, userId);
 
         if (isLiked) {

@@ -11,6 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+
 
 @Controller
 @RequestMapping("/program")
@@ -64,8 +66,10 @@ public class ProgramController {
     @ResponseBody
     public ResponseEntity<Boolean> toggleLikeProgram(
             @PathVariable Long programId,
-            @RequestParam(required = false) String userId) {
+            @RequestParam(required = false) Long userId) {
         boolean isLiked = programService.toggleLikeProgram(programId, userId);
         return ResponseEntity.ok(isLiked);
     }
+
+
 }
