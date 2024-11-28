@@ -20,7 +20,7 @@ public class ProgramSearchRequestDTO {
 
     // 페이징 관련 필드
     private int page = 1;            // 기본값 1페이지
-    private int size = 10;           // 기본값 10개
+    private int size = 9;           // 기본값 9개
     private PagingDTO paging;        // 페이징 정보
 
     // 페이징 계산

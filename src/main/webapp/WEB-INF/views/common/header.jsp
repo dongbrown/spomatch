@@ -2,12 +2,12 @@
 <header>
     <div class="container">
         <a href="/" class="logo">
-            <img src="/resources/images/logo.png" alt="SAMPLE">
-            <span>SAMPLE</span>
+            <img src="/resources/images/logo.png" alt="Spomatch">
+            <span>Spomatch</span>
         </a>
 
         <nav>
-            <a href="#">회사소개</a>
+            <a href="#">주변시설 찾기</a>
             <a href="/program/list">체육 프로그램</a>
             <a href="#">참여마당</a>
             <a href="#">알림마당</a>

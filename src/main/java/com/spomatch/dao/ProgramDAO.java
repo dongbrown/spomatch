@@ -23,13 +23,13 @@ public interface ProgramDAO {
     void updateViewCount(Long programId);
 
     // 찜하기 상태 확인
-    boolean checkLikeStatus(Long programId, String userId);
+    boolean checkLikeStatus(Long programId, Long userId);
 
     // 찜하기 추가
-    void insertProgramLike(Long programId, String userId);
+    void insertProgramLike(Long programId, Long userId);
 
     // 찜하기 삭제
-    void deleteProgramLike(Long programId, String userId);
+    void deleteProgramLike(Long programId, Long userId);
 
     // 찜하기 개수 조회
     Long selectLikeCount(Long programId);

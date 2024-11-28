@@ -55,7 +55,7 @@ $(document).ready(function() {
             maxPrice: $('input[name="maxPrice"]').val() || null,
             sortBy: $('#sortBy').val(),
             page: page,
-            size: 10
+            size: 9
         };
 
         // 체크된 요일 수집
