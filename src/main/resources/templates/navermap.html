@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>네이버 지도</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=1eruck1cfu"></script>
+</head>
+<body>
+    <div id="map" style="width:100%;height:500px;"></div>
+    <script>
+        var mapDiv = document.getElementById('map');
+        var map = new naver.maps.Map(mapDiv, {
+            zoom: 8,
+            center: new naver.maps.LatLng(36.0207091, 127.9204629)
+        });
+
+        naver.maps.Event.once(map, 'init', function() {
+            $.ajax({
+                url: '/data/earthquake.json',
+                dataType: 'json',
+                success: function(data) {
+                    console.log("데이터:", data);  // 데이터 확인
+                    startDotMap(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("에러:", error);  // 에러 확인
+                }
+            });
+        });
+
+        function startDotMap(data) {
+            data.coordinates.forEach(function(coord) {
+                new naver.maps.Marker({
+                    position: new naver.maps.LatLng(coord[1], coord[0]),
+                    map: map
+                });
+            });
+        }
+    </script>
+</body>
+</html>

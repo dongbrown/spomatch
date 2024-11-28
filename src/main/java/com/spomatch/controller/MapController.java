@@ -18,4 +18,9 @@ public class MapController {
         model.addAttribute("kakaoApiKey", kakaoApiKey);
         return "/map";
     }
+
+    @GetMapping("/navermap")
+    public String showNaverMap(Model model) {
+        return "/navermap";
+    }
 }
