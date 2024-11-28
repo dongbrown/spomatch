@@ -1,5 +1,6 @@
 package com.spomatch.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spomatch.dao.ProgramDAO;
 import com.spomatch.dto.ProgramDTO;
@@ -7,13 +8,20 @@ import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import com.spomatch.dto.response.ProgramDetailResponseDTO;
 import com.spomatch.dto.response.ProgramListResponseDTO;
 import com.spomatch.entity.SportsFacilityProgram;
+import com.spomatch.repository.ProgramRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +35,14 @@ public class ProgramServiceImpl implements ProgramService {
     private final EntityManager entityManager;
     private final ObjectMapper objectMapper;
     private final ProgramDAO programDAO;
-
+    private final ProgramRepository programRepository;
     private double currentProgress = 0.0;
+
+    @Value("${naver.maps.client-id}")
+    private String clientId;
+
+    @Value("${naver.maps.client-secret}")
+    private String clientSecret;
 
     @Override
     @Transactional
@@ -205,4 +219,37 @@ public class ProgramServiceImpl implements ProgramService {
                 String.format("%.2f", recordsPerSecond)
         );
     }
+
+    //시설 이름으로 위도/경도 추출 후 db에 저장하는 기능
+    @Override
+    public void updateCoordinates() {
+        List<SportsFacilityProgram> facilities = programRepository.findAll();
+        facilities.forEach(facility -> {
+            try {
+                Thread.sleep(100);
+                String address = URLEncoder.encode(facility.getFacilityAddress(), "UTF-8");
+                String apiUrl = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" + address;
+
+                URL url = new URL(apiUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("X-NCP-APIGW-API-KEY-ID", clientId);
+                conn.setRequestProperty("X-NCP-APIGW-API-KEY", clientSecret);
+
+                JsonNode response = objectMapper.readTree(conn.getInputStream());
+                JsonNode addresses = response.get("addresses");
+
+                if (addresses != null && addresses.size() > 0) {
+                    JsonNode addressNode = addresses.get(0);
+                    facility.setLatitude(Double.parseDouble(addressNode.get("y").asText()));
+                    facility.setLongitude(Double.parseDouble(addressNode.get("x").asText()));
+                    programRepository.save(facility);
+                    log.info("Updated coordinates for: {}", facility.getFacilityName());
+                }
+            } catch (Exception e) {
+                log.error("Error updating coordinates for: " + facility.getFacilityName(), e);
+            }
+        });
+    }
+
 }
