@@ -15,13 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +37,11 @@ public class ProgramServiceImpl implements ProgramService {
     private final ProgramDAO programDAO;
     private final ProgramRepository programRepository;
     private double currentProgress = 0.0;
+
+    // WebClient(비동기 처리) + CompletableFuture를 위한 코드 (속도 개선)
+    private final WebClient webClient;
+    private static final int BATCH_SIZE = 10;
+
 
     @Value("${naver.maps.client-id}")
     private String clientId;
@@ -223,33 +228,72 @@ public class ProgramServiceImpl implements ProgramService {
     //시설 이름으로 위도/경도 추출 후 db에 저장하는 기능
     @Override
     public void updateCoordinates() {
-        List<SportsFacilityProgram> facilities = programRepository.findAll();
-        facilities.forEach(facility -> {
-            try {
-                Thread.sleep(100);
-                String address = URLEncoder.encode(facility.getFacilityAddress(), "UTF-8");
-                String apiUrl = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" + address;
+        List<SportsFacilityProgram> facilities = programRepository.findByLatitudeIsNull();
+        log.info("Found {} facilities without coordinates", facilities.size());
 
+        facilities.parallelStream().forEach(facility -> {
+            try {
+                Thread.sleep(50);
+                String fullAddress = cleanAddress(facility);
+                log.info("Processing address: {}", fullAddress);
+
+                String address = URLEncoder.encode(fullAddress, StandardCharsets.UTF_8);
+                String apiUrl = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" + address;
                 URL url = new URL(apiUrl);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty("X-NCP-APIGW-API-KEY-ID", clientId);
                 conn.setRequestProperty("X-NCP-APIGW-API-KEY", clientSecret);
 
-                JsonNode response = objectMapper.readTree(conn.getInputStream());
-                JsonNode addresses = response.get("addresses");
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode response = mapper.readTree(conn.getInputStream());
+                log.info("API Response: {}", response);
 
+                JsonNode addresses = response.get("addresses");
                 if (addresses != null && addresses.size() > 0) {
                     JsonNode addressNode = addresses.get(0);
-                    facility.setLatitude(Double.parseDouble(addressNode.get("y").asText()));
-                    facility.setLongitude(Double.parseDouble(addressNode.get("x").asText()));
+                    double latitude = Double.parseDouble(addressNode.get("y").asText());
+                    double longitude = Double.parseDouble(addressNode.get("x").asText());
+
+                    log.info("Got coordinates: lat={}, lng={}", latitude, longitude);
+
+                    facility.setLatitude(latitude);
+                    facility.setLongitude(longitude);
                     programRepository.save(facility);
-                    log.info("Updated coordinates for: {}", facility.getFacilityName());
+                    log.info("Saved coordinates for: {}", facility.getFacilityName());
+                } else {
+                    log.warn("No coordinates found for address: {}", fullAddress);
                 }
             } catch (Exception e) {
-                log.error("Error updating coordinates for: " + facility.getFacilityName(), e);
+                log.error("Error updating facility: {} - {}", facility.getFacilityName(), e.getMessage(), e);
             }
         });
     }
 
+    //정규식으로 데이터 정제 ..
+    private String cleanAddress(SportsFacilityProgram facility) {
+        String cityName = facility.getCityName().trim();
+        String address = facility.getFacilityAddress();
+        if (address == null) {
+            // NULL인 경우 시설 이름 + 구 정보로 대체
+            address = facility.getCityName() + " " +
+                    facility.getDistrictName() + " " +
+                    facility.getFacilityName();
+        }
+        // 중복된 시/도명 제거
+        address = address.replace(cityName, "").trim();
+
+        // 중복된 구/군명 제거
+        String districtName = facility.getDistrictName().trim();
+        address = address.replace(districtName, "").trim();
+
+        // 괄호 내용 제거
+        address = address.replaceAll("\\(.*\\)", "").trim();
+
+        // 연속된 공백 제거
+        address = address.replaceAll("\\s+", " ").trim();
+
+        // 최종 주소 조합
+        return cityName + " " + districtName + " " + address;
+    }
 }

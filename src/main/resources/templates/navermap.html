@@ -7,36 +7,53 @@
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=1eruck1cfu"></script>
 </head>
 <body>
-    <div id="map" style="width:100%;height:500px;"></div>
-    <script>
-        var mapDiv = document.getElementById('map');
-        var map = new naver.maps.Map(mapDiv, {
-            zoom: 8,
-            center: new naver.maps.LatLng(36.0207091, 127.9204629)
-        });
+<div id="map" style="width:100%;height:500px;"></div>
+<script>
+    var mapDiv = document.getElementById('map');
+    var map = new naver.maps.Map(mapDiv, {
+        zoom: 11,
+        center: new naver.maps.LatLng(37.5665, 126.9780) // 서울 중심
+    });
 
-        naver.maps.Event.once(map, 'init', function() {
-            $.ajax({
-                url: '/data/earthquake.json',
-                dataType: 'json',
-                success: function(data) {
-                    console.log("데이터:", data);  // 데이터 확인
-                    startDotMap(data);
-                },
-                error: function(xhr, status, error) {
-                    console.error("에러:", error);  // 에러 확인
-                }
-            });
-        });
+    naver.maps.Event.once(map, 'init', function() {
+        $.ajax({
+            url: '/api/facilities',  // Spring Boot API 엔드포인트
+            dataType: 'json',
+            success: function(facilities) {
+                facilities.forEach(function(facility) {
+                    // 위도, 경도가 있는 시설만 마커 생성
+                    if(facility.latitude && facility.longitude) {
+                        var marker = new naver.maps.Marker({
+                            position: new naver.maps.LatLng(facility.latitude, facility.longitude),
+                            map: map
+                        });
 
-        function startDotMap(data) {
-            data.coordinates.forEach(function(coord) {
-                new naver.maps.Marker({
-                    position: new naver.maps.LatLng(coord[1], coord[0]),
-                    map: map
+                        // 마커 클릭시 정보창
+                        var infoWindow = new naver.maps.InfoWindow({
+                            content: `
+                                   <div style="padding:10px;">
+                                       <h3>${facility.facilityName}</h3>
+                                       <p>주소: ${facility.facilityAddress}</p>
+                                       <p>전화: ${facility.facilityPhoneNumber || '정보없음'}</p>
+                                   </div>
+                               `
+                        });
+
+                        naver.maps.Event.addListener(marker, 'click', function() {
+                            if (infoWindow.getMap()) {
+                                infoWindow.close();
+                            } else {
+                                infoWindow.open(map, marker);
+                            }
+                        });
+                    }
                 });
-            });
-        }
-    </script>
+            },
+            error: function(xhr, status, error) {
+                console.error("에러:", error);
+            }
+        });
+    });
+</script>
 </body>
 </html>
