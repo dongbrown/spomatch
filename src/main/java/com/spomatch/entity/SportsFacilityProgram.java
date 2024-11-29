@@ -119,6 +119,11 @@ public class SportsFacilityProgram {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // 위도, 경도 추가
+    private Double latitude;
+    private Double longitude;
+
+
     @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProgramLike> likes = new ArrayList<>();
 

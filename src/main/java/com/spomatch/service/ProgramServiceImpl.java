@@ -1,5 +1,6 @@
 package com.spomatch.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spomatch.dao.ProgramDAO;
 import com.spomatch.dto.ProgramDTO;
@@ -7,13 +8,20 @@ import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import com.spomatch.dto.response.ProgramDetailResponseDTO;
 import com.spomatch.dto.response.ProgramListResponseDTO;
 import com.spomatch.entity.SportsFacilityProgram;
+import com.spomatch.repository.ProgramRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +35,19 @@ public class ProgramServiceImpl implements ProgramService {
     private final EntityManager entityManager;
     private final ObjectMapper objectMapper;
     private final ProgramDAO programDAO;
-
+    private final ProgramRepository programRepository;
     private double currentProgress = 0.0;
+
+    // WebClient(비동기 처리) + CompletableFuture를 위한 코드 (속도 개선)
+    private final WebClient webClient;
+    private static final int BATCH_SIZE = 10;
+
+
+    @Value("${naver.maps.client-id}")
+    private String clientId;
+
+    @Value("${naver.maps.client-secret}")
+    private String clientSecret;
 
     @Override
     @Transactional
@@ -204,5 +223,77 @@ public class ProgramServiceImpl implements ProgramService {
                 String.format("%.2f", currentProgress),
                 String.format("%.2f", recordsPerSecond)
         );
+    }
+
+    //시설 이름으로 위도/경도 추출 후 db에 저장하는 기능
+    @Override
+    public void updateCoordinates() {
+        List<SportsFacilityProgram> facilities = programRepository.findByLatitudeIsNull();
+        log.info("Found {} facilities without coordinates", facilities.size());
+
+        facilities.parallelStream().forEach(facility -> {
+            try {
+                Thread.sleep(50);
+                String fullAddress = cleanAddress(facility);
+                log.info("Processing address: {}", fullAddress);
+
+                String address = URLEncoder.encode(fullAddress, StandardCharsets.UTF_8);
+                String apiUrl = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" + address;
+                URL url = new URL(apiUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("X-NCP-APIGW-API-KEY-ID", clientId);
+                conn.setRequestProperty("X-NCP-APIGW-API-KEY", clientSecret);
+
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode response = mapper.readTree(conn.getInputStream());
+                log.info("API Response: {}", response);
+
+                JsonNode addresses = response.get("addresses");
+                if (addresses != null && addresses.size() > 0) {
+                    JsonNode addressNode = addresses.get(0);
+                    double latitude = Double.parseDouble(addressNode.get("y").asText());
+                    double longitude = Double.parseDouble(addressNode.get("x").asText());
+
+                    log.info("Got coordinates: lat={}, lng={}", latitude, longitude);
+
+                    facility.setLatitude(latitude);
+                    facility.setLongitude(longitude);
+                    programRepository.save(facility);
+                    log.info("Saved coordinates for: {}", facility.getFacilityName());
+                } else {
+                    log.warn("No coordinates found for address: {}", fullAddress);
+                }
+            } catch (Exception e) {
+                log.error("Error updating facility: {} - {}", facility.getFacilityName(), e.getMessage(), e);
+            }
+        });
+    }
+
+    //정규식으로 데이터 정제 ..
+    private String cleanAddress(SportsFacilityProgram facility) {
+        String cityName = facility.getCityName().trim();
+        String address = facility.getFacilityAddress();
+        if (address == null) {
+            // NULL인 경우 시설 이름 + 구 정보로 대체
+            address = facility.getCityName() + " " +
+                    facility.getDistrictName() + " " +
+                    facility.getFacilityName();
+        }
+        // 중복된 시/도명 제거
+        address = address.replace(cityName, "").trim();
+
+        // 중복된 구/군명 제거
+        String districtName = facility.getDistrictName().trim();
+        address = address.replace(districtName, "").trim();
+
+        // 괄호 내용 제거
+        address = address.replaceAll("\\(.*\\)", "").trim();
+
+        // 연속된 공백 제거
+        address = address.replaceAll("\\s+", " ").trim();
+
+        // 최종 주소 조합
+        return cityName + " " + districtName + " " + address;
     }
 }

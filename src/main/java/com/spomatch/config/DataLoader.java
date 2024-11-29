@@ -16,13 +16,15 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) {
         try {
             log.info("Starting data import...");
-            // JSON 파일의 실제 경로를 지정해주세요
             String filePath = "src/main/resources/data/publicProgram.json";
             programService.importJsonData(filePath);
-            log.info("Data import completed. Final progress: {}%",
-                    String.format("%.2f", programService.getProgress()));
+            log.info("Data import completed.");
+
+            log.info("Starting coordinates update...");
+            programService.updateCoordinates();
+            log.info("Coordinates update completed.");
         } catch (Exception e) {
-            log.error("Failed to import data", e);
+            log.error("Failed to process data", e);
         }
     }
 }
