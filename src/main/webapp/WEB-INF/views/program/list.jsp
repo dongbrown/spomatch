@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>프로그램 목록</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/resources/css/common/style.css">
     <link rel="stylesheet" href="/resources/css/program/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -109,7 +110,13 @@
             <c:forEach items="${result.programs}" var="program">
                 <div class="program-card" data-program-id="${program.id}">
                     <div class="program-info">
-                        <h3>${program.programName}</h3>
+                        <div class="title-section">
+                            <div class="program-title" title="${program.programName}">${program.programName}</div>
+                            <div class="view-count">
+                                <i class="fas fa-eye"></i>
+                                <span><fmt:formatNumber value="${program.viewCount}" pattern="#,###"/></span>
+                            </div>
+                        </div>
                         <p class="facility">${program.facilityName}</p>
                         <p class="location">${program.cityName} ${program.districtName}</p>
                         <p class="schedule">${program.programOperationDays} ${program.programOperationTime}</p>

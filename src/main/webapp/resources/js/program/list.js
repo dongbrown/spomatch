@@ -115,7 +115,15 @@ $(document).ready(function() {
                 card.dataset.programId = program.id || '';
                 card.innerHTML = `
                     <div class="program-info">
-                        <h3>${programName}</h3>
+                        <div class="title-section">
+                            <div class="program-title" title="${program.programName}">
+                                ${programName}
+                            </div>
+                            <div class="view-count">
+                                <i class="fas fa-eye"></i>
+                                <span>${program.viewCount || 0}</span>
+                            </div>
+                        </div>
                         <p class="facility">${program.facilityName || ''}</p>
                         <p class="location">${program.cityName || ''} ${program.districtName || ''}</p>
                         <p class="schedule">

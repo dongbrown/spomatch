@@ -36,4 +36,5 @@ public class ProgramDTO {
     private String protectorParticipationYn;  // 보호인원참가여부
     private String leaderQualificationContent;// 지도자자격내용
     private String event; // 종목
+    private int viewCount;
 }
