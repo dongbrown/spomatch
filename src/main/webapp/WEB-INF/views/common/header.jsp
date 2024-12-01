@@ -2,8 +2,8 @@
 <header>
     <div class="container">
         <a href="/" class="logo">
-            <img src="/resources/images/logo.png" alt="Spomatch">
-            <span>Spomatch</span>
+            <img src="/resources/images/logo.svg" alt="SPOMATCH">
+            <span></span>
         </a>
 
         <nav>
