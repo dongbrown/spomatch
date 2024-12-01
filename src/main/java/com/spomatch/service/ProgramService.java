@@ -36,4 +36,6 @@ public interface ProgramService {
      * @return 현재 진행률 (0-100)
      */
     double getProgress();
+
+    void updateCoordinates();
 }
