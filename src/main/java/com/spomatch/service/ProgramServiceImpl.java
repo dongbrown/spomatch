@@ -13,6 +13,8 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -172,9 +174,10 @@ public class ProgramServiceImpl implements ProgramService {
     @Transactional
     public void importJsonData(String filePath) {
         try {
-            File file = new File(filePath);
+            // ClassPathResource를 사용하여 리소스 접근
+            Resource resource = new ClassPathResource("data/publicProgram.json");
             List<SportsFacilityProgram> programs = Arrays.asList(
-                    objectMapper.readValue(file, SportsFacilityProgram[].class));
+                    objectMapper.readValue(resource.getInputStream(), SportsFacilityProgram[].class));
 
             int batchSize = 1000;
             int totalSize = programs.size();

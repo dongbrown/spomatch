@@ -9,6 +9,9 @@
         <setting name="jdbcTypeForNull" value="NULL"/>
         <setting name="callSettersOnNulls" value="true"/>
         <setting name="useGeneratedKeys" value="true"/>
+        <!-- mysql용 설정 -->
+        <setting name="defaultExecutorType" value="REUSE"/>
+        <setting name="defaultStatementTimeout" value="30"/>
     </settings>
 
     <!-- 타입 별칭 -->

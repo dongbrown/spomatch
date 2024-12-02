@@ -4,7 +4,9 @@ import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import com.spomatch.dto.response.ProgramDetailResponseDTO;
 import com.spomatch.dto.response.ProgramListResponseDTO;
 import com.spomatch.service.ProgramService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -66,7 +68,12 @@ public class ProgramController {
     @ResponseBody
     public ResponseEntity<Boolean> toggleLikeProgram(
             @PathVariable Long programId,
-            @RequestParam(required = false) Long userId) {
+            HttpSession httpSession) {
+        Long userId = (Long) httpSession.getAttribute("memberId");
+        if (userId == null) {
+            // 로그인하지 않은 경우 처리
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         boolean isLiked = programService.toggleLikeProgram(programId, userId);
         return ResponseEntity.ok(isLiked);
     }
