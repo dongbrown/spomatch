@@ -23,18 +23,5 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    public Member login(LoginMemberRequest request) {
-        Member member = memberRepository.findByLoginId(request.getLoginId())
-                .orElseThrow(() -> new IllegalArgumentException("아이디를 확인해주세요."));
 
-        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("비밀번호를 확인해주세요.");
-        }
-
-        httpSession.setAttribute("memberId", member.getId());
-        log.info("Session saved - memberId: {}, sessionId: {}",
-                member.getId(), httpSession.getId());
-
-        return member;
-    }
 }
