@@ -1,7 +1,10 @@
 package com.spomatch.config;
 
+import com.spomatch.entity.Member;
+import com.spomatch.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,13 +12,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @Slf4j
+@RequiredArgsConstructor
 public class SecurityConfig {
+    private final CustomAuthSuccessHandler authSuccessHandler;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -37,12 +45,8 @@ public class SecurityConfig {
                         .loginProcessingUrl("/login")
                         .usernameParameter("loginId")
                         .passwordParameter("password")
-                        .successHandler((request, response, authentication) -> {
-                            String sessionId = request.getSession().getId();
-                            log.info("로그인 성공! 세션 ID: {}", sessionId);
-                            log.info("인증된 사용자: {}", authentication.getName());
-                            response.sendRedirect("/");
-                        })
+                        .successHandler(authSuccessHandler)  // 핸들러 사용
+
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")

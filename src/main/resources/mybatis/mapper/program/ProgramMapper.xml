@@ -5,8 +5,35 @@
 <mapper namespace="com.spomatch.dao.ProgramDAO">
     <!-- 프로그램 목록 조회 -->
     <select id="selectProgramList" parameterType="ProgramSearchRequestDTO" resultType="ProgramDTO">
-        SELECT * FROM (
-        SELECT ROWNUM AS rnum, A.* FROM (
+        SELECT
+        fp.id,
+        fp.cityCode,
+        fp.cityName,
+        fp.districtCode,
+        fp.districtName,
+        fp.educationGoalContent,
+        fp.facilityAddress,
+        fp.facilityName,
+        fp.facilityPhoneNumber,
+        fp.facilityTypeName,
+        fp.homepageUrl,
+        fp.leaderQualificationContent,
+        fp.programBeginDate,
+        fp.programEndDate,
+        fp.programName,
+        fp.programOperationDays,
+        fp.programOperationTime,
+        fp.programPrice,
+        fp.programPriceTypeName,
+        fp.programRecruitNumber,
+        fp.programTargetName,
+        fp.programTypeName,
+        fp.protectorParticipationYn,
+        fp.safetyManagementContent,
+        fp.viewCount,
+        fp.createdAt,
+        COALESCE(pl.like_count, 0) as likeCount
+        FROM (
         SELECT
         id,
         ctprvn_cd as cityCode,
@@ -34,7 +61,7 @@
         safe_managt_cn as safetyManagementContent,
         view_count as viewCount,
         created_at as createdAt
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         WHERE 1=1
         <if test="cityName != null and cityName != ''">
             AND ctprvn_nm = #{cityName}
@@ -50,47 +77,47 @@
             <foreach item="event" collection="events" separator=" OR ">
                 <choose>
                     <when test="event == '수영'">
-                        progrm_nm LIKE '%수영%'
+                        progrm_nm LIKE CONCAT('%', '수영', '%')
                     </when>
                     <when test="event == '골프'">
-                        progrm_nm LIKE '%골프%'
+                        progrm_nm LIKE CONCAT('%', '골프', '%')
                     </when>
                     <when test="event == '탁구'">
-                        progrm_nm LIKE '%탁구%'
+                        progrm_nm LIKE CONCAT('%', '탁구', '%')
                     </when>
                     <when test="event == '배드민턴'">
-                        progrm_nm LIKE '%배드민턴%'
+                        progrm_nm LIKE CONCAT('%', '배드민턴', '%')
                     </when>
                     <when test="event == '댄스'">
-                        (progrm_nm LIKE '%댄스%' OR progrm_nm LIKE '%춤%')
+                        (progrm_nm LIKE CONCAT('%', '댄스', '%') OR progrm_nm LIKE CONCAT('%', '춤', '%'))
                     </when>
                     <when test="event == '필라테스'">
-                        progrm_nm LIKE '%필라테스%'
+                        progrm_nm LIKE CONCAT('%', '필라테스', '%')
                     </when>
                     <when test="event == '헬스'">
-                        (progrm_nm LIKE '%헬스%' OR progrm_nm LIKE '%피트니스%')
+                        (progrm_nm LIKE CONCAT('%', '헬스', '%') OR progrm_nm LIKE CONCAT('%', '피트니스', '%'))
                     </when>
                     <when test="event == '테니스'">
-                        progrm_nm LIKE '%테니스%'
+                        progrm_nm LIKE CONCAT('%', '테니스', '%')
                     </when>
                     <when test="event == '에어로빅'">
-                        progrm_nm LIKE '%에어로빅%'
+                        progrm_nm LIKE CONCAT('%', '에어로빅', '%')
                     </when>
                     <when test="event == '축구'">
-                        (program_nm LIKE '%축구%' OR program_nm LIKE '%풋살%')
+                        (progrm_nm LIKE CONCAT('%', '축구', '%') OR progrm_nm LIKE CONCAT('%', '풋살', '%'))
                     </when>
                     <when test="event == '기타'">
-                        progrm_nm NOT LIKE '%수영%'
-                        AND progrm_nm NOT LIKE '%골프%'
-                        AND progrm_nm NOT LIKE '%탁구%'
-                        AND progrm_nm NOT LIKE '%배드민턴%'
-                        AND progrm_nm NOT LIKE '%댄스%'
-                        AND progrm_nm NOT LIKE '%춤%'
-                        AND progrm_nm NOT LIKE '%필라테스%'
-                        AND progrm_nm NOT LIKE '%헬스%'
-                        AND progrm_nm NOT LIKE '%피트니스%'
-                        AND progrm_nm NOT LIKE '%테니스%'
-                        AND progrm_nm NOT LIKE '%에어로빅%'
+                        progrm_nm NOT LIKE CONCAT('%', '수영', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '골프', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '탁구', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '배드민턴', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '댄스', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '춤', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '필라테스', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '헬스', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '피트니스', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '테니스', '%')
+                        AND progrm_nm NOT LIKE CONCAT('%', '에어로빅', '%')
                     </when>
                 </choose>
             </foreach>
@@ -103,20 +130,44 @@
             </foreach>
         </if>
         <if test="minPrice != null">
-            AND progrm_prc <![CDATA[>=]]> #{minPrice}
+            <![CDATA[
+            AND progrm_prc >= #{minPrice}
+            ]]>
         </if>
         <if test="maxPrice != null">
-            AND progrm_prc <![CDATA[<=]]> #{maxPrice}
+            <![CDATA[
+            AND progrm_prc <= #{maxPrice}
+            ]]>
         </if>
-        ORDER BY created_at DESC
-        ) A WHERE ROWNUM <![CDATA[<=]]> #{end}
-        ) WHERE rnum > #{start}
+        ) fp
+        LEFT JOIN (
+        SELECT program_id, COUNT(*) as like_count
+        FROM program_likes
+        GROUP BY program_id
+        ) pl ON fp.id = pl.program_id
+        <choose>
+            <when test="sortBy == 'popularity'">
+                ORDER BY pl.like_count DESC, fp.viewCount DESC
+            </when>
+            <when test="sortBy == 'deadline'">
+                ORDER BY
+                CASE
+                WHEN fp.programEndDate >= CURRENT_DATE THEN 0
+                ELSE 1
+                END,
+                fp.programEndDate ASC
+            </when>
+            <otherwise>
+                ORDER BY fp.createdAt DESC
+            </otherwise>
+        </choose>
+        LIMIT #{start}, #{pageSize}
     </select>
 
     <!-- 프로그램 전체 개수 조회 -->
     <select id="selectProgramCount" parameterType="ProgramSearchRequestDTO" resultType="int">
         SELECT COUNT(*)
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         WHERE 1=1
         <if test="cityName != null and cityName != ''">
             AND ctprvn_nm = #{cityName}
@@ -134,10 +185,14 @@
             </foreach>
         </if>
         <if test="minPrice != null">
-            AND progrm_prc <![CDATA[>=]]> #{minPrice}
+            <![CDATA[
+            AND progrm_prc >= #{minPrice}
+            ]]>
         </if>
         <if test="maxPrice != null">
-            AND progrm_prc <![CDATA[<=]]> #{maxPrice}
+            <![CDATA[
+            AND progrm_prc <= #{maxPrice}
+            ]]>
         </if>
     </select>
 
@@ -170,131 +225,119 @@
             safe_managt_cn as safetyManagementContent,
             view_count as viewCount,
             created_at as createdAt
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         WHERE id = #{programId}
     </select>
 
     <!-- 조회수 증가 -->
     <update id="updateViewCount" parameterType="long">
-        UPDATE FACILITY_PROGRAM
+        UPDATE facility_program
         SET view_count = view_count + 1
         WHERE id = #{programId}
     </update>
 
     <!-- 찜하기 상태 확인 -->
-    <select id="checkLikeStatus" parameterType="map" resultType="int">
-        SELECT COUNT(*)
-        FROM PROGRAM_LIKES
-        WHERE program_id = #{programId}
-          AND user_id = #{userId}
+    <select id="checkLikeStatus" parameterType="map" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM program_likes
+            WHERE program_id = #{programId}
+              AND member_id = #{userId}
+        ) as exists_flag
     </select>
 
     <!-- 찜하기 추가 -->
     <insert id="insertProgramLike" parameterType="map">
-        INSERT INTO PROGRAM_LIKES (
+        INSERT INTO program_likes (
             program_id,
-            user_id,
+            member_id,
             created_at
         ) VALUES (
                      #{programId},
                      #{userId},
-                     SYSDATE
+                     NOW()
                  )
     </insert>
 
     <!-- 찜하기 삭제 -->
     <delete id="deleteProgramLike" parameterType="map">
-        DELETE FROM PROGRAM_LIKES
+        DELETE FROM program_likes
         WHERE program_id = #{programId}
-          AND user_id = #{userId}
+          AND member_id = #{userId}
     </delete>
-
-    <!-- 찜하기 개수 조회 -->
-    <select id="selectLikeCount" parameterType="long" resultType="long">
-        SELECT COUNT(*)
-        FROM PROGRAM_LIKES
-        WHERE program_id = #{programId}
-    </select>
-
-    <!-- 신청 인원 조회 -->
-    <select id="selectRegisterCount" parameterType="long" resultType="int">
-        SELECT COUNT(*)
-        FROM PROGRAM_REGISTERS
-        WHERE program_id = #{programId}
-    </select>
 
     <!-- 추천 프로그램 조회 -->
     <select id="selectRecommendedPrograms" parameterType="map" resultType="ProgramDTO">
         SELECT
-            id,
-            ctprvn_cd as cityCode,
-            ctprvn_nm as cityName,
-            signgu_cd as districtCode,
-            signgu_nm as districtName,
-            edc_goal_cn as educationGoalContent,
-            fclty_addr as facilityAddress,
-            fclty_nm as facilityName,
-            fclty_tel_no as facilityPhoneNumber,
-            fclty_ty_nm as facilityTypeName,
-            hmpg_url as homepageUrl,
-            ldr_qualfc_cn as leaderQualificationContent,
-            progrm_begin_de as programBeginDate,
-            progrm_end_de as programEndDate,
-            progrm_nm as programName,
-            progrm_estbl_wkday_nm as programOperationDays,
-            progrm_estbl_tizn_value as programOperationTime,
-            progrm_prc as programPrice,
-            progrm_prc_ty_nm as programPriceTypeName,
-            progrm_rcrit_nmpr_co as programRecruitNumber,
-            progrm_trget_nm as programTargetName,
-            progrm_ty_nm as programTypeName,
-            prtc_nmpr_partcpt_at as protectorParticipationYn,
-            safe_managt_cn as safetyManagementContent,
-            view_count as viewCount,
-            created_at as createdAt
-        FROM FACILITY_PROGRAM p
+            p.id,
+            p.ctprvn_cd as cityCode,
+            p.ctprvn_nm as cityName,
+            p.signgu_cd as districtCode,
+            p.signgu_nm as districtName,
+            p.edc_goal_cn as educationGoalContent,
+            p.fclty_addr as facilityAddress,
+            p.fclty_nm as facilityName,
+            p.fclty_tel_no as facilityPhoneNumber,
+            p.fclty_ty_nm as facilityTypeName,
+            p.hmpg_url as homepageUrl,
+            p.ldr_qualfc_cn as leaderQualificationContent,
+            p.progrm_begin_de as programBeginDate,
+            p.progrm_end_de as programEndDate,
+            p.progrm_nm as programName,
+            p.progrm_estbl_wkday_nm as programOperationDays,
+            p.progrm_estbl_tizn_value as programOperationTime,
+            p.progrm_prc as programPrice,
+            p.progrm_prc_ty_nm as programPriceTypeName,
+            p.progrm_rcrit_nmpr_co as programRecruitNumber,
+            p.progrm_trget_nm as programTargetName,
+            p.progrm_ty_nm as programTypeName,
+            p.prtc_nmpr_partcpt_at as protectorParticipationYn,
+            p.safe_managt_cn as safetyManagementContent,
+            p.view_count as viewCount,
+            p.created_at as createdAt
+        FROM facility_program p
         WHERE EXISTS (
             SELECT 1
-            FROM PROGRAM_LIKES l
-            WHERE l.user_id = #{userId}
+            FROM program_likes l
+            WHERE l.member_id = #{userId}
               AND l.program_id = p.id
         )
-          AND ROWNUM <![CDATA[<=]]> #{limit}
-        ORDER BY created_at DESC
+        ORDER BY p.created_at DESC
+            LIMIT #{limit}
     </select>
 
     <!-- 시도 목록 조회 -->
     <select id="selectCityList" resultType="string">
         SELECT DISTINCT ctprvn_nm
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         ORDER BY ctprvn_nm
     </select>
 
     <!-- 시군구 목록 조회 -->
     <select id="selectDistrictList" resultType="string">
         SELECT DISTINCT signgu_nm
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         ORDER BY signgu_nm
     </select>
 
     <!-- 시설유형 목록 조회 -->
     <select id="selectFacilityTypeList" resultType="string">
         SELECT DISTINCT fclty_ty_nm
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         ORDER BY fclty_ty_nm
     </select>
 
     <!-- 프로그램유형 목록 조회 -->
     <select id="selectProgramTypeList" resultType="string">
         SELECT DISTINCT progrm_ty_nm
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         ORDER BY progrm_ty_nm
     </select>
 
     <!-- 대상연령 목록 조회 -->
     <select id="selectTargetAgeList" resultType="string">
         SELECT DISTINCT progrm_trget_nm
-        FROM FACILITY_PROGRAM
+        FROM facility_program
         ORDER BY progrm_trget_nm
     </select>
 </mapper>

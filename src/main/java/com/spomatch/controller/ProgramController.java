@@ -4,7 +4,10 @@ import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import com.spomatch.dto.response.ProgramDetailResponseDTO;
 import com.spomatch.dto.response.ProgramListResponseDTO;
 import com.spomatch.service.ProgramService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,8 +15,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
-
+@Slf4j
 @Controller
 @RequestMapping("/program")
 @RequiredArgsConstructor
@@ -64,9 +69,20 @@ public class ProgramController {
     // 프로그램 찜하기
     @PostMapping("/api/like/{programId}")
     @ResponseBody
-    public ResponseEntity<Boolean> toggleLikeProgram(
+    public ResponseEntity<?> toggleLikeProgram(
             @PathVariable Long programId,
-            @RequestParam(required = false) Long userId) {
+            HttpSession httpSession) {
+        // 세션 확인을 위한 로깅 추가
+        Long userId = (Long) httpSession.getAttribute("memberId");
+        log.info("Current Session ID: {}", httpSession.getId());
+        log.info("memberId from session: {}", userId);
+
+        if (userId == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "로그인 후 이용 가능합니다");
+            response.put("redirectUrl", "/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
         boolean isLiked = programService.toggleLikeProgram(programId, userId);
         return ResponseEntity.ok(isLiked);
     }
