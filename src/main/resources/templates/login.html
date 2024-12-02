@@ -64,7 +64,7 @@
         </div>
 
         <!-- 로그인 폼 -->
-        <form id="loginForm" class="space-y-6">
+        <form id="loginForm" method="post" action="/login" class="space-y-6">
             <div>
                 <label for="loginId" class="block text-sm font-medium text-gray-700 mb-1">아이디</label>
                 <input type="text"
@@ -129,27 +129,23 @@
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const formData = {
-            loginId: document.querySelector('input[name="loginId"]').value,
-            password: document.querySelector('input[name="password"]').value
-        };
+        const formData = new URLSearchParams();
+        formData.append('loginId', document.querySelector('input[name="loginId"]').value);
+        formData.append('password', document.querySelector('input[name="password"]').value);
 
         try {
-            const response = await fetch('/member/login', {
+            const response = await fetch('/login', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify(formData)
+                body: formData
             });
 
-            const data = await response.json();  // 응답 데이터 파싱
-
-            if (response.ok) {
-                alert(data.message);  // "로그인 성공" 메시지 표시
-                window.location.href = '/';
-            } else {
-                alert(data.message);  // 에러 메시지 표시
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (!response.ok) {
+                alert('로그인에 실패했습니다.');
             }
         } catch (error) {
             console.error('Error:', error);

@@ -57,11 +57,9 @@
                 <a href="#" class="menu-hover">자료실</a>
             </nav>
 
-            <!-- 로그인/ 회원가입 -->
-            <div class="flex items-center space-x-4">
-                <a href="/login" class="text-gray-600 hover:text-blue-600">로그인</a>
-                <span class="text-gray-300">|</span>
-                <a href="/register" class="text-gray-600 hover:text-blue-600">회원가입</a>
+            <!-- 로그인/회원가입 영역 -->
+            <div id="auth-buttons" class="flex items-center space-x-4">
+                <!-- JavaScript로 동적으로 내용이 변경됨 -->
             </div>
         </div>
     </div>
@@ -196,5 +194,57 @@
         </div>
     </div>
 </footer>
+
+<script>
+    // 페이지 로드 시 인증 상태 확인
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/auth/status');
+            const data = await response.json();
+
+            const authButtonsDiv = document.getElementById('auth-buttons');
+
+            if (data.isAuthenticated) {
+                // 로그인 상태일 때
+                authButtonsDiv.innerHTML = `
+                <span class="text-gray-700">${data.username}</span>
+                <button onclick="logout()"
+                        class="ml-4 text-gray-600 hover:text-blue-600">
+                    로그아웃
+                </button>
+            `;
+            } else {
+                // 비로그인 상태일 때
+                authButtonsDiv.innerHTML = `
+                <a href="/login" class="text-gray-600 hover:text-blue-600">로그인</a>
+                <span class="text-gray-300">|</span>
+                <a href="/register" class="text-gray-600 hover:text-blue-600">회원가입</a>
+            `;
+            }
+        } catch (error) {
+            console.error('인증 상태 확인 실패:', error);
+        }
+    }
+
+    // 로그아웃 함수
+    async function logout() {
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                window.location.href = '/';  // 홈페이지로 리다이렉트
+            }
+        } catch (error) {
+            console.error('로그아웃 실패:', error);
+            alert('로그아웃 처리 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', checkAuthStatus);
+</script>
+
 </body>
 </html>
