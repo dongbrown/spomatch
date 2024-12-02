@@ -10,12 +10,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PROGRAM_LIKES")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProgramLike {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,8 +22,9 @@ public class ProgramLike {
     @JoinColumn(name = "program_id")
     private SportsFacilityProgram program;
 
-    @Column(name = "user_id", length = 100)
-    private String userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")  // MEMBER_ID와 매핑
+    private Member member;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
