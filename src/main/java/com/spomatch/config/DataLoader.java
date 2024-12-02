@@ -17,12 +17,15 @@ public class DataLoader implements CommandLineRunner {
         try {
             log.info("Starting data import...");
             String filePath = "src/main/resources/data/publicProgram.json";
+            long beforeTime = System.currentTimeMillis();
             programService.importJsonData(filePath);
             log.info("Data import completed.");
 
             log.info("Starting coordinates update...");
             programService.updateCoordinates();
-            log.info("Coordinates update completed.");
+            long afterTime = System.currentTimeMillis();
+            long secDiffTime = (afterTime - beforeTime)/1000;
+            log.info("Coordinates update completed. 소요시간 : {}", secDiffTime);
         } catch (Exception e) {
             log.error("Failed to process data", e);
         }

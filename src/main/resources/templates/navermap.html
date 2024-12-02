@@ -5,54 +5,317 @@
     <title>네이버 지도</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=1eruck1cfu"></script>
+    <style>
+        .cluster {
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+        .cluster-1 {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 20px;
+            background-color: rgba(33, 150, 243, 0.8);
+        }
+        .cluster-2 {
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            border-radius: 25px;
+            background-color: rgba(33, 150, 243, 0.9);
+        }
+        .cluster-3 {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            border-radius: 30px;
+            background-color: rgba(33, 150, 243, 1);
+        }
+    </style>
 </head>
 <body>
 <div id="map" style="width:100%;height:500px;"></div>
 <script>
+    function truncateText(text, maxLength) {
+        if (!text) return '정보없음';
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '정보없음';
+        return `${dateStr.substring(0,4)}.${dateStr.substring(4,6)}.${dateStr.substring(6,8)}`;
+    }
+
+    function formatPrice(price) {
+        if (!price) return '정보없음';
+        return Number(price).toLocaleString() + '원';
+    }
+
+    // MarkerClustering 클래스 정의
+    class MarkerClustering {
+        constructor(options) {
+            this.map = options.map;
+            this.markers = options.markers;
+            this.gridSize = options.gridSize || 100;
+            this.minClusterSize = options.minClusterSize || 2;
+            this.clusters = [];
+
+            naver.maps.Event.addListener(this.map, 'zoom_changed', () => this.redraw());
+            naver.maps.Event.addListener(this.map, 'bounds_changed', () => this.redraw());
+
+            this.redraw();
+        }
+
+        redraw() {
+            const zoom = this.map.getZoom();
+
+            // 기존 클러스터 제거
+            this.clusters.forEach(cluster => {
+                if (cluster.marker) {
+                    cluster.marker.setMap(null);
+                }
+            });
+            this.clusters = [];
+
+            // 모든 마커 숨기기
+            this.markers.forEach(marker => marker.setMap(null));
+
+            // 높은 줌 레벨에서는 개별 마커 표시
+            if (zoom >= 14) {
+                this.markers.forEach(marker => marker.setMap(this.map));
+                return;
+            }
+
+            // 클러스터링 로직
+            const bounds = this.map.getBounds();
+            const clusters = this.createClusters(bounds);
+
+            clusters.forEach(cluster => {
+                if (cluster.markers.length >= this.minClusterSize) {
+                    const clusterMarker = new naver.maps.Marker({
+                        position: cluster.position,
+                        map: this.map,
+                        icon: {
+                            content: this.createClusterIcon(cluster.markers.length),
+                            size: new naver.maps.Size(40, 40),
+                            anchor: new naver.maps.Point(20, 20)
+                        }
+                    });
+
+                    // 클러스터 클릭 이벤트
+                    naver.maps.Event.addListener(clusterMarker, 'click', () => {
+                        const pos = clusterMarker.getPosition();
+                        map.setZoom(map.getZoom() + 2);
+                        map.setCenter(pos);
+                    });
+
+                    this.clusters.push({ marker: clusterMarker, markers: cluster.markers });
+                } else {
+                    cluster.markers.forEach(marker => marker.setMap(this.map));
+                }
+            });
+        }
+
+        createClusters(bounds) {
+            const clusters = [];
+            const visibleMarkers = this.markers.filter(marker =>
+                bounds.hasLatLng(marker.getPosition())
+            );
+
+            visibleMarkers.forEach(marker => {
+                let foundCluster = false;
+                for (let cluster of clusters) {
+                    if (this.isMarkerInRadius(marker, cluster.position, this.gridSize)) {
+                        cluster.markers.push(marker);
+                        foundCluster = true;
+                        break;
+                    }
+                }
+                if (!foundCluster) {
+                    clusters.push({
+                        position: marker.getPosition(),
+                        markers: [marker]
+                    });
+                }
+            });
+
+            return clusters;
+        }
+
+        isMarkerInRadius(marker, center, radius) {
+            const latLng = marker.getPosition();
+            const distance = this.getDistance(
+                center.lat(), center.lng(),
+                latLng.lat(), latLng.lng()
+            );
+            return distance <= radius;
+        }
+
+        getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = this.deg2rad(lat2 - lat1);
+            const dLon = this.deg2rad(lon2 - lon1);
+            const a =
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c * 1000;
+        }
+
+        deg2rad(deg) {
+            return deg * (Math.PI/180);
+        }
+
+        createClusterIcon(count) {
+            let className = 'cluster-1';
+            if (count >= 10) className = 'cluster-2';
+            if (count >= 30) className = 'cluster-3';
+            return `<div class="cluster ${className}">${count}</div>`;
+        }
+    }
+
     var mapDiv = document.getElementById('map');
     var map = new naver.maps.Map(mapDiv, {
         zoom: 11,
-        center: new naver.maps.LatLng(37.5665, 126.9780) // 서울 중심
+        center: new naver.maps.LatLng(37.5665, 126.9780)
     });
+
+    var currentInfoWindow = null;
+    var toggleStates = {};
 
     naver.maps.Event.once(map, 'init', function() {
         $.ajax({
-            url: '/api/facilities',  // Spring Boot API 엔드포인트
+            url: '/api/facilities',
             dataType: 'json',
             success: function(facilities) {
-                facilities.forEach(function(facility) {
-                    // 위도, 경도가 있는 시설만 마커 생성
+                var markers = [];
+
+                facilities.forEach(function(facility, index) {
                     if(facility.latitude && facility.longitude) {
                         var marker = new naver.maps.Marker({
-                            position: new naver.maps.LatLng(facility.latitude, facility.longitude),
-                            map: map
+                            position: new naver.maps.LatLng(facility.latitude, facility.longitude)
                         });
 
-                        // 마커 클릭시 정보창
+                        markers.push(marker);
+
+                        const markerId = `marker_${index}`;
+                        toggleStates[markerId] = false;
+
+                        function createInfoWindowContent(facility, showDetail, markerId) {
+                            return `
+                                <div style="padding:15px;min-width:280px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);font-family:'Noto Sans KR', sans-serif;">
+                                    <h3 style="margin:0 0 15px 0;font-size:16px;color:#333;border-bottom:2px solid #2196F3;padding-bottom:8px;">
+                                        ${truncateText(facility.FCLTY_NM, 30)}
+                                    </h3>
+
+                                    <div style="background:#f8f9fa;padding:12px;border-radius:6px;margin-bottom:12px;">
+                                        <p style="margin:0;font-size:13px;color:#444;">
+                                            <strong style="color:#1976D2;">프로그램:</strong>
+                                            <span style="margin-left:4px;">${truncateText(facility.PROGRM_NM, 40)}</span>
+                                        </p>
+                                    </div>
+
+                                    <div style="margin-bottom:12px;">
+                                        <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                                            <span style="min-width:45px;color:#666;"><strong>지역</strong></span>
+                                            <span style="margin-left:8px;">${facility.CTPRVN_NM} ${facility.SIGNGU_NM}</span>
+                                        </p>
+                                        <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                                            <span style="min-width:45px;color:#666;"><strong>주소</strong></span>
+                                            <span style="margin-left:8px;">${facility.FCLTY_ADDR || '정보없음'}</span>
+                                        </p>
+                                        <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                                            <span style="min-width:45px;color:#666;"><strong>전화</strong></span>
+                                            <span style="margin-left:8px;">${facility.FCLTY_TEL_NO || '정보없음'}</span>
+                                        </p>
+                                    </div>
+
+                                    ${showDetail ? `
+                                        <div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:12px;margin:15px 0;">
+                                            <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;">프로그램 정보</h4>
+                                            <p style="margin:5px 0;font-size:13px;"><strong>대상:</strong> ${facility.PROGRM_TRGET_NM || '정보없음'}</p>
+                                            <p style="margin:5px 0;font-size:13px;"><strong>요일:</strong> ${facility.PROGRM_ESTBL_WKDAY_NM || '정보없음'}</p>
+                                            <p style="margin:5px 0;font-size:13px;"><strong>시간:</strong> ${facility.PROGRM_ESTBL_TIZN_VALUE || '정보없음'}</p>
+                                            <p style="margin:5px 0;font-size:13px;"><strong>기간:</strong> ${formatDate(facility.PROGRM_BEGIN_DE)} ~ ${formatDate(facility.PROGRM_END_DE)}</p>
+                                            <p style="margin:5px 0;font-size:13px;"><strong>가격:</strong> <span style="color:#1976D2;font-weight:bold">${formatPrice(facility.PROGRM_PRC)}</span></p>
+                                            <p style="margin:5px 0;font-size:13px;"><strong>모집인원:</strong> ${facility.PROGRM_RCRIT_NMPR_CO || 0}명</p>
+                                        </div>
+                                    ` : ''}
+
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:12px;border-top:1px solid #eee;">
+                                        <button onclick="window.toggleDetail_${markerId}()" style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;font-size:13px;cursor:pointer;">
+                                            ${showDetail ? '기본 정보만 보기' : '프로그램 상세정보'}
+                                        </button>
+                                        ${facility.HMPG_URL ? `
+                                            <a href="${facility.HMPG_URL}" target="_blank"
+                                               style="padding:6px 12px;background:#666;color:white;
+                                                      text-decoration:none;border-radius:4px;font-size:13px;margin-left:auto;">
+                                                홈페이지 방문
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }
+
                         var infoWindow = new naver.maps.InfoWindow({
-                            content: `
-                                   <div style="padding:10px;">
-                                       <h3>${facility.facilityName}</h3>
-                                       <p>주소: ${facility.facilityAddress}</p>
-                                       <p>전화: ${facility.facilityPhoneNumber || '정보없음'}</p>
-                                   </div>
-                               `
+                            content: createInfoWindowContent(facility, false, markerId),
+                            borderWidth: 0,
+                            backgroundColor: 'white',
+                            anchorSize: new naver.maps.Size(12, 12),
+                            anchorSkew: true,
+                            pixelOffset: new naver.maps.Point(0, -5)
                         });
 
-                        naver.maps.Event.addListener(marker, 'click', function() {
-                            if (infoWindow.getMap()) {
-                                infoWindow.close();
-                            } else {
-                                infoWindow.open(map, marker);
+                        naver.maps.Event.addListener(marker, 'click', function(e) {
+                            if (currentInfoWindow) {
+                                currentInfoWindow.close();
                             }
+                            toggleStates[markerId] = false;
+                            infoWindow.setContent(createInfoWindowContent(facility, false, markerId));
+                            infoWindow.open(map, marker);
+                            currentInfoWindow = infoWindow;
                         });
+
+                        window[`toggleDetail_${markerId}`] = function() {
+                            toggleStates[markerId] = !toggleStates[markerId];
+                            infoWindow.setContent(createInfoWindowContent(facility, toggleStates[markerId], markerId));
+                        };
                     }
                 });
+
+                // 클러스터링 적용
+                new MarkerClustering({
+                    map: map,
+                    markers: markers,
+                    gridSize: 100,
+                    minClusterSize: 2
+                });
+
+                // 초기 영역 설정
+                if(markers.length > 0) {
+                    var bounds = new naver.maps.LatLngBounds();
+                    markers.forEach(function(marker) {
+                        bounds.extend(marker.getPosition());
+                    });
+                    map.fitBounds(bounds);
+                }
             },
             error: function(xhr, status, error) {
                 console.error("에러:", error);
             }
         });
+    });
+
+    naver.maps.Event.addListener(map, 'click', function() {
+        if (currentInfoWindow) {
+            currentInfoWindow.close();
+            currentInfoWindow = null;
+        }
     });
 </script>
 </body>
