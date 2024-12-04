@@ -24,25 +24,25 @@
             font-size: 14px;
             font-weight: bold;
             color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .cluster-1 {
             width: 40px;
             height: 40px;
-            line-height: 40px;
             border-radius: 20px;
             background-color: rgba(33, 150, 243, 0.6);
         }
         .cluster-2 {
             width: 50px;
             height: 50px;
-            line-height: 50px;
             border-radius: 25px;
             background-color: rgba(33, 150, 243, 0.7);
         }
         .cluster-3 {
             width: 60px;
             height: 60px;
-            line-height: 60px;
             border-radius: 30px;
             background-color: rgba(33, 150, 243, 0.8);
         }
@@ -51,6 +51,7 @@
 <body>
 <div id="map"></div>
 <script>
+    // 유틸리티 함수들
     function truncateText(text, maxLength) {
         if (!text) return '정보없음';
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
@@ -78,7 +79,21 @@
         };
     }
 
-    // MarkerClustering 클래스 정의
+    function getGridSizeByZoom(zoom) {
+        const gridSizes = {
+            7: 400,
+            8: 300,
+            9: 200,
+            10: 150,
+            11: 100,
+            12: 80,
+            13: 60,
+            14: 40
+        };
+        return gridSizes[zoom] || 100;
+    }
+
+    // MarkerClustering 클래스
     class MarkerClustering {
         constructor(options) {
             this.map = options.map;
@@ -86,16 +101,18 @@
             this.clusters = [];
             this.minClusterSize = options.minClusterSize || 2;
 
-            // 줌 레벨별 격자 크기 정의
             this.gridSizes = {
-                7: 400,   // 낮은 줌에서는 더 큰 격자
-                8: 300,
-                9: 200,
-                10: 150,
-                11: 100,
-                12: 80,
-                13: 60,
-                14: 0     // 14 이상에서는 클러스터링 하지 않음
+                4: 2,
+                5: 3,
+                6: 4,
+                7: 6,
+                8: 8,
+                9: 16,
+                10: 32,
+                11: 64,
+                12: 128,
+                13: 256,
+                14: 512
             };
 
             this.setMarkers(options.markers);
@@ -121,64 +138,308 @@
             const zoom = this.map.getZoom();
             this.clearClusters();
 
-            // 높은 줌 레벨에서는 개별 마커 표시
             if (zoom >= 16) {
-                this.markers.forEach(marker => marker.setMap(this.map));
+                this.markers.forEach(marker => {
+                    marker.setMap(this.map);
+                    this.setupMarkerClickEvent(marker);
+                });
                 return;
             }
 
-            const gridSize = this.gridSizes[zoom] || 100;
             const bounds = this.map.getBounds();
+            const divisions = this.gridSizes[zoom] || 32;
+
+            const latSpan = bounds.getNE().lat() - bounds.getSW().lat();
+            const lngSpan = bounds.getNE().lng() - bounds.getSW().lng();
+            const latUnit = latSpan / divisions;
+            const lngUnit = lngSpan / divisions;
+
             const clustersMap = new Map();
 
-            // 보이는 영역의 마커만 처리
             this.markers.filter(marker => bounds.hasLatLng(marker.getPosition())).forEach(marker => {
                 const pos = marker.getPosition();
-                const key = Math.floor(pos.lat() * gridSize) + "_" + Math.floor(pos.lng() * gridSize);
+                const latIndex = Math.floor((pos.lat() - bounds.getSW().lat()) / latUnit);
+                const lngIndex = Math.floor((pos.lng() - bounds.getSW().lng()) / lngUnit);
+                const key = `${latIndex}_${lngIndex}`;
 
                 if (!clustersMap.has(key)) {
                     clustersMap.set(key, {
+                        markers: [],
                         position: pos,
-                        markers: []
+                        facilities: []
                     });
                 }
                 clustersMap.get(key).markers.push(marker);
+                clustersMap.get(key).facilities.push(...marker.facilities);
             });
 
-            // 클러스터 생성
-            clustersMap.forEach(cluster => {
-                if (cluster.markers.length >= this.minClusterSize) {
-                    const clusterMarker = new naver.maps.Marker({
-                        position: cluster.position,
-                        map: this.map,
-                        icon: {
-                            content: this.createClusterIcon(cluster.markers.length),
-                            size: new naver.maps.Size(40, 40),
-                            anchor: new naver.maps.Point(20, 20)
+            if (zoom <= 8) {
+                const superClustersMap = new Map();
+
+                clustersMap.forEach((cluster, key) => {
+                    if (cluster.markers.length >= this.minClusterSize) {
+                        const [latIndex, lngIndex] = key.split('_').map(Number);
+                        const superLatIndex = Math.floor(latIndex / 2);
+                        const superLngIndex = Math.floor(lngIndex / 2);
+                        const superKey = `${superLatIndex}_${superLngIndex}`;
+
+                        if (!superClustersMap.has(superKey)) {
+                            superClustersMap.set(superKey, {
+                                markers: [],
+                                position: cluster.position,
+                                facilities: []
+                            });
                         }
-                    });
+                        superClustersMap.get(superKey).markers.push(...cluster.markers);
+                        superClustersMap.get(superKey).facilities.push(...cluster.facilities);
+                    }
+                });
 
-                    // 클러스터 클릭 이벤트
-                    naver.maps.Event.addListener(clusterMarker, 'click', () => {
-                        this.map.setZoom(this.map.getZoom() + 2);
-                        this.map.setCenter(clusterMarker.getPosition());
-                    });
+                superClustersMap.forEach(cluster => {
+                    if (cluster.markers.length >= this.minClusterSize) {
+                        this.createClusterMarker(cluster);
+                    }
+                });
+            } else {
+                clustersMap.forEach(cluster => {
+                    if (cluster.markers.length >= this.minClusterSize) {
+                        this.createClusterMarker(cluster);
+                    } else {
+                        cluster.markers.forEach(marker => {
+                            marker.setMap(this.map);
+                            this.setupMarkerClickEvent(marker);
+                        });
+                    }
+                });
+            }
+        }
 
-                    this.clusters.push({ marker: clusterMarker, markers: cluster.markers });
-                } else {
-                    cluster.markers.forEach(marker => marker.setMap(this.map));
+        setupMarkerClickEvent(marker) {
+            naver.maps.Event.addListener(marker, 'click', () => {
+                if (currentInfoWindow) {
+                    currentInfoWindow.close();
+                }
+
+                const mapHeight = map.getSize().height;
+                const offset = mapHeight * 0.15;
+
+                const markerPosition = marker.getPosition();
+                const projectionCoord = map.getProjection().fromCoordToOffset(markerPosition);
+                projectionCoord.y -= offset;
+                const offsetPosition = map.getProjection().fromOffsetToCoord(projectionCoord);
+
+                let isDragging = false;
+
+                const dragStartListener = naver.maps.Event.addListener(map, 'dragstart', () => {
+                    isDragging = true;
+                    naver.maps.Event.removeListener(dragStartListener);
+                });
+
+                const startPos = map.getCenter();
+                const startTime = Date.now();
+                const duration = 500;
+
+                // 더 부드러운 easing 함수
+                const easeOutCubic = t => {
+                    const t1 = t - 1;
+                    return t1 * t1 * t1 + 1;
+                };
+
+                let lastFrame = null;
+                const animate = (currentTime) => {
+                    if (isDragging) return;
+
+                    if (!lastFrame) lastFrame = currentTime;
+                    const deltaTime = currentTime - lastFrame;
+                    lastFrame = currentTime;
+
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    if (progress < 1) {
+                        const easeProgress = easeOutCubic(progress);
+
+                        const lat = startPos.lat() + (offsetPosition.lat() - startPos.lat()) * easeProgress;
+                        const lng = startPos.lng() + (offsetPosition.lng() - startPos.lng()) * easeProgress;
+
+                        map.setCenter(new naver.maps.LatLng(lat, lng));
+                        requestAnimationFrame(animate);
+                    }
+                };
+
+                requestAnimationFrame(animate);
+
+                const facilities = marker.facilities;
+                if (!facilities || facilities.length === 0) return;
+
+                const totalFacilities = facilities.length;
+                const mainFacility = facilities[0];
+                const markerId = `marker_${marker.__uniqueId}`;
+
+                // 마커의 모든 시설 정보를 전역 변수로 저장
+                window[`facilities_${markerId}`] = facilities;
+
+                const infoContent = createInfoWindowContent(
+                    mainFacility,
+                    false,
+                    markerId,
+                    totalFacilities
+                );
+
+                const infoWindow = new naver.maps.InfoWindow({
+                    content: infoContent,
+                    borderWidth: 0,
+                    backgroundColor: 'white',
+                    anchorSize: new naver.maps.Size(12, 12),
+                    anchorSkew: true,
+                    pixelOffset: new naver.maps.Point(0, -5)
+                });
+
+                window[`toggleDetail_${markerId}`] = function() {
+                    const isDetailView = !toggleStates[markerId];
+                    toggleStates[markerId] = isDetailView;
+                    infoWindow.setContent(createInfoWindowContent(
+                        mainFacility,
+                        isDetailView,
+                        markerId,
+                        totalFacilities
+                    ));
+                };
+
+                infoWindow.open(map, marker);
+                currentInfoWindow = infoWindow;
+            });
+        }
+
+        createClusterMarker(cluster) {
+            const centerLat = cluster.markers.reduce((sum, marker) =>
+                sum + marker.getPosition().lat(), 0) / cluster.markers.length;
+            const centerLng = cluster.markers.reduce((sum, marker) =>
+                sum + marker.getPosition().lng(), 0) / cluster.markers.length;
+
+            const clusterCenter = new naver.maps.LatLng(centerLat, centerLng);
+
+            const clusterMarker = new naver.maps.Marker({
+                position: clusterCenter,
+                map: this.map,
+                icon: {
+                    content: this.createClusterIcon(cluster.facilities.length),
+                    size: new naver.maps.Size(40, 40),
+                    anchor: new naver.maps.Point(20, 20)
                 }
             });
+
+            naver.maps.Event.addListener(clusterMarker, 'click', () => {
+                const newZoom = this.map.getZoom() + 2;
+                if (newZoom <= this.map.getOptions().maxZoom) {
+                    this.map.setZoom(newZoom);
+                }
+                this.map.setCenter(clusterCenter);
+            });
+
+            this.clusters.push({ marker: clusterMarker, markers: cluster.markers });
         }
 
         createClusterIcon(count) {
             let className = 'cluster-1';
-            if (count >= 10) className = 'cluster-2';
-            if (count >= 30) className = 'cluster-3';
-            return `<div class="cluster ${className}">${count}</div>`;
+            if (count >= 100) className = 'cluster-3';
+            else if (count >= 30) className = 'cluster-2';
+
+            const displayCount = count >= 1000 ?
+                (Math.round(count/100)/10) + 'K' :
+                count;
+
+            return `<div class="cluster ${className}">${displayCount}</div>`;
         }
     }
 
+    // 정보창 컨텐츠 생성 함수
+    function createInfoWindowContent(facility, showDetail, markerId, totalFacilities) {
+        const facilities = window[`facilities_${markerId}`];
+        const remainingPrograms = totalFacilities - 1; // 현재 보여주는 프로그램 제외
+
+        return `
+        <div style="padding:15px;min-width:280px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);font-family:'Noto Sans KR', sans-serif;background:white;">
+            <h3 style="margin:0 0 15px 0;font-size:16px;color:#333;border-bottom:2px solid #2196F3;padding-bottom:8px;">
+                ${truncateText(facility.FCLTY_NM, 30)}
+                ${remainingPrograms > 0 ?
+            `<span style="font-size:13px;color:#2196F3;margin-left:8px;cursor:pointer;text-decoration:underline;"
+                          onclick="toggleFacilityList('${markerId}')" id="facilityCount_${markerId}">
+                        이 외에 진행중인 프로그램: ${remainingPrograms}개
+                    </span>`
+            : ''}
+            </h3>
+
+            <div style="position:relative;">
+                <div id="facilityList_${markerId}" style="display:none;position:absolute;top:0;right:-280px;
+                    width:250px;background:white;padding:15px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                    <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;border-bottom:1px solid #e0e0e0;padding-bottom:8px;">
+                        진행중인 프로그램 목록
+                    </h4>
+                    <div style="max-height:300px;overflow-y:auto;">
+                        ${facilities?.filter(f => f !== facility).map((f, index) => `
+                            <div onclick="showFacilityDetail('${markerId}', ${index + 1})"
+                                style="padding:8px;margin:4px 0;background:#f8f9fa;border-radius:4px;cursor:pointer;
+                                       transition:all 0.2s ease;font-size:13px;hover:background-color:#e3f2fd;">
+                                ${truncateText(f.PROGRM_NM, 40)}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="background:#f8f9fa;padding:12px;border-radius:6px;margin-bottom:12px;">
+                    <p style="margin:0;font-size:13px;color:#444;">
+                        <strong style="color:#1976D2;">프로그램:</strong>
+                        <span style="margin-left:4px;">${truncateText(facility.PROGRM_NM, 40)}</span>
+                    </p>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                        <span style="min-width:45px;color:#666;"><strong>지역</strong></span>
+                        <span style="margin-left:8px;">${facility.CTPRVN_NM} ${facility.SIGNGU_NM}</span>
+                    </p>
+                    <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                        <span style="min-width:45px;color:#666;"><strong>주소</strong></span>
+                        <span style="margin-left:8px;">${facility.FCLTY_ADDR || '정보없음'}</span>
+                    </p>
+                    <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                        <span style="min-width:45px;color:#666;"><strong>전화</strong></span>
+                        <span style="margin-left:8px;">${facility.FCLTY_TEL_NO || '정보없음'}</span>
+                    </p>
+                </div>
+
+                ${showDetail ? `
+                    <div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:12px;margin:15px 0;">
+                        <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;">프로그램 정보</h4>
+                        <p style="margin:5px 0;font-size:13px;"><strong>대상:</strong> ${facility.PROGRM_TRGET_NM || '정보없음'}</p>
+                        <p style="margin:5px 0;font-size:13px;"><strong>요일:</strong> ${facility.PROGRM_ESTBL_WKDAY_NM || '정보없음'}</p>
+                        <p style="margin:5px 0;font-size:13px;"><strong>시간:</strong> ${facility.PROGRM_ESTBL_TIZN_VALUE || '정보없음'}</p>
+                        <p style="margin:5px 0;font-size:13px;"><strong>기간:</strong> ${formatDate(facility.PROGRM_BEGIN_DE)} ~ ${formatDate(facility.PROGRM_END_DE)}</p>
+                        <p style="margin:5px 0;font-size:13px;"><strong>가격:</strong> <span style="color:#1976D2;font-weight:bold">${formatPrice(facility.PROGRM_PRC)}</span></p>
+                        <p style="margin:5px 0;font-size:13px;"><strong>모집인원:</strong> ${facility.PROGRM_RCRIT_NMPR_CO || 0}명</p>
+                    </div>
+                ` : ''}
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:12px;border-top:1px solid #eee;">
+                    <button onclick="window.toggleDetail_${markerId}()"
+                            style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;font-size:13px;cursor:pointer;">
+                        ${showDetail ? '기본 정보만 보기' : '프로그램 상세정보'}
+                    </button>
+                    ${facility.HMPG_URL ? `
+                        <a href="${facility.HMPG_URL}" target="_blank"
+                           style="padding:6px 12px;background:#666;color:white;
+                                  text-decoration:none;border-radius:4px;font-size:13px;margin-left:auto;">
+                            홈페이지 방문
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    }
+
+    // 지도 초기화
     var mapDiv = document.getElementById('map');
     var map = new naver.maps.Map(mapDiv, {
         zoom: 7,
@@ -190,79 +451,60 @@
         zoomControl: true
     });
 
+    // 전역 변수 선언
     var currentInfoWindow = null;
     var toggleStates = {};
     var markers = [];
     var clustering = null;
+    const dataCache = new Map();
 
-    function createInfoWindowContent(facility, showDetail, markerId) {
-        return `
-           <div style="padding:15px;min-width:280px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);font-family:'Noto Sans KR', sans-serif;">
-               <h3 style="margin:0 0 15px 0;font-size:16px;color:#333;border-bottom:2px solid #2196F3;padding-bottom:8px;">
-                   ${truncateText(facility.FCLTY_NM, 30)}
-               </h3>
+    // 마커 업데이트 함수
+    function updateMarkersAndClusters(facilities) {
+        if(clustering) {
+            clustering.clearClusters();
+        }
 
-               <div style="background:#f8f9fa;padding:12px;border-radius:6px;margin-bottom:12px;">
-                   <p style="margin:0;font-size:13px;color:#444;">
-                       <strong style="color:#1976D2;">프로그램:</strong>
-                       <span style="margin-left:4px;">${truncateText(facility.PROGRM_NM, 40)}</span>
-                   </p>
-               </div>
+        const locationGroups = new Map();
 
-               <div style="margin-bottom:12px;">
-                   <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
-                       <span style="min-width:45px;color:#666;"><strong>지역</strong></span>
-                       <span style="margin-left:8px;">${facility.CTPRVN_NM} ${facility.SIGNGU_NM}</span>
-                   </p>
-                   <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
-                       <span style="min-width:45px;color:#666;"><strong>주소</strong></span>
-                       <span style="margin-left:8px;">${facility.FCLTY_ADDR || '정보없음'}</span>
-                   </p>
-                   <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
-                       <span style="min-width:45px;color:#666;"><strong>전화</strong></span>
-                       <span style="margin-left:8px;">${facility.FCLTY_TEL_NO || '정보없음'}</span>
-                   </p>
-               </div>
+        facilities.forEach(facility => {
+            if(!facility.latitude || !facility.longitude) return;
 
-               ${showDetail ? `
-                   <div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:12px;margin:15px 0;">
-                       <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;">프로그램 정보</h4>
-                       <p style="margin:5px 0;font-size:13px;"><strong>대상:</strong> ${facility.PROGRM_TRGET_NM || '정보없음'}</p>
-                       <p style="margin:5px 0;font-size:13px;"><strong>요일:</strong> ${facility.PROGRM_ESTBL_WKDAY_NM || '정보없음'}</p>
-                       <p style="margin:5px 0;font-size:13px;"><strong>시간:</strong> ${facility.PROGRM_ESTBL_TIZN_VALUE || '정보없음'}</p>
-                       <p style="margin:5px 0;font-size:13px;"><strong>기간:</strong> ${formatDate(facility.PROGRM_BEGIN_DE)} ~ ${formatDate(facility.PROGRM_END_DE)}</p>
-                       <p style="margin:5px 0;font-size:13px;"><strong>가격:</strong> <span style="color:#1976D2;font-weight:bold">${formatPrice(facility.PROGRM_PRC)}</span></p>
-                       <p style="margin:5px 0;font-size:13px;"><strong>모집인원:</strong> ${facility.PROGRM_RCRIT_NMPR_CO || 0}명</p>
-                   </div>
-               ` : ''}
+            const key = `${facility.latitude}_${facility.longitude}`;
 
-               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:12px;border-top:1px solid #eee;">
-                   <button onclick="window.toggleDetail_${markerId}()" style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;font-size:13px;cursor:pointer;">
-                       ${showDetail ? '기본 정보만 보기' : '프로그램 상세정보'}
-                   </button>
-                   ${facility.HMPG_URL ? `
-                       <a href="${facility.HMPG_URL}" target="_blank"
-                          style="padding:6px 12px;background:#666;color:white;
-                                 text-decoration:none;border-radius:4px;font-size:13px;margin-left:auto;">
-                           홈페이지 방문
-                       </a>
-                   ` : ''}
-               </div>
-           </div>
-       `;
+            if (!locationGroups.has(key)) {
+                locationGroups.set(key, {
+                    position: new naver.maps.LatLng(facility.latitude, facility.longitude),
+                    facilities: []
+                });
+            }
+            locationGroups.get(key).facilities.push(facility);
+        });
+
+        const newMarkers = Array.from(locationGroups.values()).map(group => {
+            const marker = new naver.maps.Marker({
+                position: group.position
+            });
+            marker.facilities = group.facilities;
+            return marker;
+        });
+
+        clustering = new MarkerClustering({
+            map: map,
+            markers: newMarkers,
+            minClusterSize: 2,
+            gridSize: getGridSizeByZoom(map.getZoom())
+        });
     }
-    const dataCache = new Map();  // 캐시 저장소
 
+    // 마커 로드 함수
     const loadMarkers = debounce(function() {
         const bounds = map.getBounds();
         const zoom = map.getZoom();
 
-        if (zoom <= 6) return; // 너무 낮은 줌에서는 로드하지 않음
+        if (zoom <= 6) return;
 
-        // 캐시 키 생성
         const cacheKey = `${bounds.toString()}_${zoom}`;
 
-        // 캐시된 데이터가 있으면 사용
         if(dataCache.has(cacheKey)) {
             updateMarkersAndClusters(dataCache.get(cacheKey));
             return;
@@ -278,7 +520,7 @@
                 zoom: zoom
             },
             success: function(facilities) {
-                dataCache.set(cacheKey, facilities); // 캐시에 데이터 저장
+                dataCache.set(cacheKey, facilities);
                 updateMarkersAndClusters(facilities);
             },
             error: function(xhr, status, error) {
@@ -287,75 +529,31 @@
         });
     }, 500);
 
-    function updateMarkersAndClusters(facilities) {
-        // 기존 클러스터 정리
-        if(clustering) {
-            clustering.clearClusters();
+    // 시설 목록 토글 함수
+    function toggleFacilityList(markerId) {
+        const listElement = document.getElementById(`facilityList_${markerId}`);
+        if (listElement) {
+            const isVisible = listElement.style.display !== 'none';
+            listElement.style.display = isVisible ? 'none' : 'block';
         }
-
-        // 마커 생성
-        const newMarkers = facilities.map((facility, index) => {
-            if(!facility.latitude || !facility.longitude) return null;
-
-            const marker = new naver.maps.Marker({
-                position: new naver.maps.LatLng(facility.latitude, facility.longitude)
-            });
-
-            // 클릭 이벤트 리스너 추가
-            marker.addListener = function() {
-                const markerId = `marker_${index}`;
-                if (currentInfoWindow) {
-                    currentInfoWindow.close();
-                }
-
-                const infoWindow = new naver.maps.InfoWindow({
-                    content: createInfoWindowContent(facility, false, markerId),
-                    borderWidth: 0,
-                    backgroundColor: 'white',
-                    anchorSize: new naver.maps.Size(12, 12),
-                    anchorSkew: true,
-                    pixelOffset: new naver.maps.Point(0, -5)
-                });
-
-                // 토글 함수 정의
-                window[`toggleDetail_${markerId}`] = function() {
-                    const isDetailView = !toggleStates[markerId];
-                    toggleStates[markerId] = isDetailView;
-                    infoWindow.setContent(createInfoWindowContent(facility, isDetailView, markerId));
-                };
-
-                infoWindow.open(map, marker);
-                currentInfoWindow = infoWindow;
-            };
-
-            // 실제 클릭 이벤트는 마커 클릭 시에만 생성
-            naver.maps.Event.addListener(marker, 'click', () => marker.addListener());
-
-            return marker;
-        }).filter(Boolean); // null 값 제거
-
-        // 새로운 클러스터링 적용
-        clustering = new MarkerClustering({
-            map: map,
-            markers: newMarkers,
-            minClusterSize: 2,
-            gridSize: getGridSizeByZoom(map.getZoom())
-        });
     }
 
-    // 줌 레벨별 그리드 사이즈 반환
-    function getGridSizeByZoom(zoom) {
-        const gridSizes = {
-            7: 400,
-            8: 300,
-            9: 200,
-            10: 150,
-            11: 100,
-            12: 80,
-            13: 60,
-            14: 40
-        };
-        return gridSizes[zoom] || 100;
+    // 특정 시설의 상세 정보 표시 함수
+    function showFacilityDetail(markerId, index) {
+        const facilities = window[`facilities_${markerId}`];
+        if (!facilities || !facilities[index]) return;
+
+        const infoWindow = currentInfoWindow;
+        if (!infoWindow) return;
+
+        toggleStates[markerId] = true;  // 상세 정보 표시 상태로 설정
+
+        infoWindow.setContent(createInfoWindowContent(
+            facilities[index],
+            true,
+            markerId,
+            facilities.length
+        ));
     }
 
     // 이벤트 리스너 설정
