@@ -122,6 +122,14 @@
             border-radius: 30px;
             background-color: rgba(33, 150, 243, 0.8);
         }
+
+        /* 기존 스타일 유지하면서 a 태그에 대한 스타일 추가 */
+        .menu-items a.menu-item {
+            display: block;  /* div처럼 블록 레벨 요소로 변경 */
+            width: 100%;    /* 너비 100% 설정 */
+            text-decoration: none;  /* 밑줄 제거 */
+            box-sizing: border-box;  /* padding이 너비에 포함되도록 설정 */
+        }
     </style>
 </head>
 <body>
@@ -132,7 +140,7 @@
     </div>
     <div class="menu-items">
         <div class="menu-item">홈</div>
-        <div class="menu-item">프로그램 검색</div>
+        <a href="/program/list" class="menu-item">프로그램 검색</a>
         <div class="menu-item">시설 정보</div>
         <div class="menu-item">이용 안내</div>
         <div class="menu-item">고객센터</div>
@@ -392,11 +400,13 @@
                 window[`toggleDetail_${markerId}`] = function() {
                     const isDetailView = !toggleStates[markerId];
                     toggleStates[markerId] = isDetailView;
+                    const currentIndex = currentSelectedPrograms[markerId] || 0;
+
                     infoWindow.setContent(createInfoWindowContent(
-                        mainFacility,
+                        facilities[currentIndex],
                         isDetailView,
                         markerId,
-                        totalFacilities
+                        facilities.length
                     ));
                 };
 
@@ -447,89 +457,96 @@
         }
     }
 
-    // 정보창 컨텐츠 생성 함수
+        // 정보창 컨텐츠 생성 함수
     function createInfoWindowContent(facility, showDetail, markerId, totalFacilities) {
         const facilities = window[`facilities_${markerId}`];
-        const remainingPrograms = totalFacilities - 1; // 현재 보여주는 프로그램 제외
+        const remainingPrograms = totalFacilities - 1;
+        const currentIndex = currentSelectedPrograms[markerId] || 0;
+        const currentFacility = facilities[currentIndex];
 
         return `
-        <div style="padding:15px;min-width:280px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);font-family:'Noto Sans KR', sans-serif;background:white;">
-            <h3 style="margin:0 0 15px 0;font-size:16px;color:#333;border-bottom:2px solid #2196F3;padding-bottom:8px;">
-                ${truncateText(facility.FCLTY_NM, 30)}
-                ${remainingPrograms > 0 ?
+       <div style="padding:15px;min-width:280px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);font-family:'Noto Sans KR', sans-serif;background:white;">
+           <h3 style="margin:0 0 15px 0;font-size:16px;color:#333;border-bottom:2px solid #2196F3;padding-bottom:8px;">
+               ${truncateText(currentFacility.FCLTY_NM, 30)}
+               ${remainingPrograms > 0 ?
             `<span style="font-size:13px;color:#2196F3;margin-left:8px;cursor:pointer;text-decoration:underline;"
-                          onclick="toggleFacilityList('${markerId}')" id="facilityCount_${markerId}">
-                        이 외에 진행중인 프로그램: ${remainingPrograms}개
-                    </span>`
+                         onclick="toggleFacilityList('${markerId}')" id="facilityCount_${markerId}">
+                       이 외에 진행중인 프로그램: ${remainingPrograms}개
+                   </span>`
             : ''}
-            </h3>
+           </h3>
 
-            <div style="position:relative;">
-                <div id="facilityList_${markerId}" style="display:none;position:absolute;top:0;right:-280px;
-                    width:250px;background:white;padding:15px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-                    <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;border-bottom:1px solid #e0e0e0;padding-bottom:8px;">
-                        진행중인 프로그램 목록
-                    </h4>
-                    <div style="max-height:300px;overflow-y:auto;">
-                        ${facilities?.filter(f => f !== facility).map((f, index) => `
-                            <div onclick="showFacilityDetail('${markerId}', ${index + 1})"
-                                style="padding:8px;margin:4px 0;background:#f8f9fa;border-radius:4px;cursor:pointer;
-                                       transition:all 0.2s ease;font-size:13px;hover:background-color:#e3f2fd;">
-                                ${truncateText(f.PROGRM_NM, 40)}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
+           <div style="position:relative;">
+               <div id="facilityList_${markerId}" style="display:none;position:absolute;top:0;right:-280px;
+                   width:250px;background:white;padding:15px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                   <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;border-bottom:1px solid #e0e0e0;padding-bottom:8px;">
+                       진행중인 프로그램 목록
+                   </h4>
+                   <div style="max-height:300px;overflow-y:auto;">
+                       ${facilities.map((f, index) => `
+                           <div onclick="showFacilityDetail('${markerId}', ${index})"
+                               style="padding:8px;margin:4px 0;background:#f8f9fa;border-radius:4px;cursor:pointer;
+                                      transition:all 0.2s ease;font-size:13px;hover:background-color:#e3f2fd;">
+                               ${truncateText(f.PROGRM_NM, 40)}
+                           </div>
+                       `).join('')}
+                   </div>
+               </div>
 
-                <div style="background:#f8f9fa;padding:12px;border-radius:6px;margin-bottom:12px;">
-                    <p style="margin:0;font-size:13px;color:#444;">
-                        <strong style="color:#1976D2;">프로그램:</strong>
-                        <span style="margin-left:4px;">${truncateText(facility.PROGRM_NM, 40)}</span>
-                    </p>
-                </div>
+               <div style="background:#f8f9fa;padding:12px;border-radius:6px;margin-bottom:12px;">
+                   <p style="margin:0;font-size:13px;color:#444;">
+                       <strong style="color:#1976D2;">프로그램:</strong>
+                       <span style="margin-left:4px;">${truncateText(currentFacility.PROGRM_NM, 40)}</span>
+                   </p>
+               </div>
 
-                <div style="margin-bottom:12px;">
-                    <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
-                        <span style="min-width:45px;color:#666;"><strong>지역</strong></span>
-                        <span style="margin-left:8px;">${facility.CTPRVN_NM} ${facility.SIGNGU_NM}</span>
-                    </p>
-                    <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
-                        <span style="min-width:45px;color:#666;"><strong>주소</strong></span>
-                        <span style="margin-left:8px;">${facility.FCLTY_ADDR || '정보없음'}</span>
-                    </p>
-                    <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
-                        <span style="min-width:45px;color:#666;"><strong>전화</strong></span>
-                        <span style="margin-left:8px;">${facility.FCLTY_TEL_NO || '정보없음'}</span>
-                    </p>
-                </div>
+               <div style="margin-bottom:12px;">
+                   <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                       <span style="min-width:45px;color:#666;"><strong>지역</strong></span>
+                       <span style="margin-left:8px;">${currentFacility.CTPRVN_NM} ${currentFacility.SIGNGU_NM}</span>
+                   </p>
+                   <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                       <span style="min-width:45px;color:#666;"><strong>주소</strong></span>
+                       <span style="margin-left:8px;">${currentFacility.FCLTY_ADDR || '정보없음'}</span>
+                   </p>
+                   <p style="margin:8px 0;font-size:13px;color:#555;display:flex;">
+                       <span style="min-width:45px;color:#666;"><strong>전화</strong></span>
+                       <span style="margin-left:8px;">${currentFacility.FCLTY_TEL_NO || '정보없음'}</span>
+                   </p>
+               </div>
 
-                ${showDetail ? `
-                    <div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:12px;margin:15px 0;">
-                        <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;">프로그램 정보</h4>
-                        <p style="margin:5px 0;font-size:13px;"><strong>대상:</strong> ${facility.PROGRM_TRGET_NM || '정보없음'}</p>
-                        <p style="margin:5px 0;font-size:13px;"><strong>요일:</strong> ${facility.PROGRM_ESTBL_WKDAY_NM || '정보없음'}</p>
-                        <p style="margin:5px 0;font-size:13px;"><strong>시간:</strong> ${facility.PROGRM_ESTBL_TIZN_VALUE || '정보없음'}</p>
-                        <p style="margin:5px 0;font-size:13px;"><strong>기간:</strong> ${formatDate(facility.PROGRM_BEGIN_DE)} ~ ${formatDate(facility.PROGRM_END_DE)}</p>
-                        <p style="margin:5px 0;font-size:13px;"><strong>가격:</strong> <span style="color:#1976D2;font-weight:bold">${formatPrice(facility.PROGRM_PRC)}</span></p>
-                        <p style="margin:5px 0;font-size:13px;"><strong>모집인원:</strong> ${facility.PROGRM_RCRIT_NMPR_CO || 0}명</p>
-                    </div>
-                ` : ''}
+               ${showDetail ? `
+                   <div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:12px;margin:15px 0;">
+                       <h4 style="margin:0 0 10px 0;font-size:14px;color:#1976D2;">프로그램 정보</h4>
+                       <p style="margin:5px 0;font-size:13px;"><strong>대상:</strong> ${currentFacility.PROGRM_TRGET_NM || '정보없음'}</p>
+                       <p style="margin:5px 0;font-size:13px;"><strong>요일:</strong> ${currentFacility.PROGRM_ESTBL_WKDAY_NM || '정보없음'}</p>
+                       <p style="margin:5px 0;font-size:13px;"><strong>시간:</strong> ${currentFacility.PROGRM_ESTBL_TIZN_VALUE || '정보없음'}</p>
+                       <p style="margin:5px 0;font-size:13px;"><strong>기간:</strong> ${formatDate(currentFacility.PROGRM_BEGIN_DE)} ~ ${formatDate(currentFacility.PROGRM_END_DE)}</p>
+                       <p style="margin:5px 0;font-size:13px;"><strong>가격:</strong> <span style="color:#1976D2;font-weight:bold">${formatPrice(currentFacility.PROGRM_PRC)}</span></p>
+                       <p style="margin:5px 0;font-size:13px;"><strong>모집인원:</strong> ${currentFacility.PROGRM_RCRIT_NMPR_CO || 0}명</p>
+                   </div>
+               ` : ''}
 
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:12px;border-top:1px solid #eee;">
+               <div style="display:flex;justify-content:flex-start;align-items:center;margin-top:15px;padding-top:12px;border-top:1px solid #eee;">
+                <div style="display:flex;gap:8px;width:100%;">
                     <button onclick="window.toggleDetail_${markerId}()"
-                            style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;font-size:13px;cursor:pointer;">
-                        ${showDetail ? '기본 정보만 보기' : '프로그램 상세정보'}
+                            style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;font-size:13px;cursor:pointer;flex:1;white-space:nowrap;">
+                        ${showDetail ? '기본 정보만 보기' : '간단 정보 더보기'}
                     </button>
-                    ${facility.HMPG_URL ? `
-                        <a href="${facility.HMPG_URL}" target="_blank"
-                           style="padding:6px 12px;background:#666;color:white;
-                                  text-decoration:none;border-radius:4px;font-size:13px;margin-left:auto;">
+                    <a href="/program/detail/${currentFacility.PROGRM_ID}"
+                       style="padding:6px 12px;background:#1976D2;color:white;border:none;border-radius:4px;font-size:13px;cursor:pointer;text-decoration:none;flex:1;text-align:center;white-space:nowrap;">
+                        상세페이지 이동
+                    </a>
+                    ${currentFacility.HMPG_URL ? `
+                        <a href="${currentFacility.HMPG_URL}" target="_blank"
+                           style="padding:6px 12px;background:#666;color:white;text-decoration:none;border-radius:4px;font-size:13px;flex:1;text-align:center;white-space:nowrap;">
                             홈페이지 방문
                         </a>
                     ` : ''}
                 </div>
             </div>
-        </div>
+           </div>
+       </div>
     `;
     }
 
@@ -598,6 +615,7 @@
     // 전역 변수 선언
     var currentInfoWindow = null;
     var toggleStates = {};
+    var currentSelectedPrograms = {}; // 각 마커별 현재 선택된 프로그램 인덱스 저장
     var markers = [];
     var clustering = null;
     const dataCache = new Map();
@@ -682,23 +700,27 @@
         }
     }
 
-    // 특정 시설의 상세 정보 표시 함수
+    // 특정 시설의 상세 정보 표시 함수 수정
     function showFacilityDetail(markerId, index) {
         const facilities = window[`facilities_${markerId}`];
         if (!facilities || !facilities[index]) return;
 
+        // 선택된 프로그램 인덱스 저장
+        currentSelectedPrograms[markerId] = index;
+
         const infoWindow = currentInfoWindow;
         if (!infoWindow) return;
 
-        toggleStates[markerId] = true;  // 상세 정보 표시 상태로 설정
+        toggleStates[markerId] = false;  // 기본 정보 표시 상태로 설정
 
         infoWindow.setContent(createInfoWindowContent(
             facilities[index],
-            true,
+            false,  // 기본 정보만 보이도록 false로 설정
             markerId,
             facilities.length
         ));
     }
+
 
     // 이벤트 리스너 설정
     naver.maps.Event.once(map, 'init', loadMarkers);
