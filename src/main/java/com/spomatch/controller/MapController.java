@@ -27,7 +27,7 @@ public class MapController {
         return "/map";
     }
 
-    @GetMapping("/navermap")
+    @GetMapping("/")
     public String showNaverMap(Model model) {
         return "/navermap";
     }
