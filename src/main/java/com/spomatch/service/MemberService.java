@@ -1,6 +1,5 @@
 package com.spomatch.service;
 
-import com.spomatch.dto.request.LoginMemberRequest;
 import com.spomatch.entity.Member;
 import com.spomatch.repository.MemberRepository;
 import jakarta.servlet.http.HttpSession;
@@ -22,6 +21,5 @@ public class MemberService {
         member.encodePassword(passwordEncoder);
         return memberRepository.save(member);
     }
-
 
 }
