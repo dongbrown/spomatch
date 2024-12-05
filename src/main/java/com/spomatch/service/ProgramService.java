@@ -1,8 +1,11 @@
 package com.spomatch.service;
 
+import com.spomatch.dto.ProgramDTO;
 import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import com.spomatch.dto.response.ProgramDetailResponseDTO;
 import com.spomatch.dto.response.ProgramListResponseDTO;
+
+import java.util.List;
 
 public interface ProgramService {
 
@@ -38,4 +41,6 @@ public interface ProgramService {
     double getProgress();
 
     void updateCoordinates();
+
+    List<ProgramDTO> selectLikedProgramList(Long memberId);
 }

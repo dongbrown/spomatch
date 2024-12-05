@@ -2,6 +2,7 @@ package com.spomatch.dao;
 
 import com.spomatch.dto.ProgramDTO;
 import com.spomatch.dto.request.ProgramSearchRequestDTO;
+import com.spomatch.dto.response.ProgramListResponseDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -46,4 +47,6 @@ public interface ProgramDAO {
     List<String> selectFacilityTypeList(); // 시설유형 목록
     List<String> selectProgramTypeList();  // 프로그램유형 목록
     List<String> selectTargetAgeList();    // 대상연령 목록
+
+    List<ProgramDTO> selectLikedProgramList(Long memberId);
 }
