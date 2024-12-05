@@ -2,6 +2,7 @@ package com.spomatch.dao;
 
 import com.spomatch.dto.ProgramDTO;
 import com.spomatch.dto.request.ProgramSearchRequestDTO;
+import com.spomatch.dto.response.ProgramListResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSession;
@@ -108,5 +109,10 @@ public class ProgramDAOImpl implements ProgramDAO {
     @Override
     public List<String> selectTargetAgeList() {
         return sqlSession.selectList(NAMESPACE + "selectTargetAgeList");
+    }
+
+    @Override
+    public List<ProgramDTO> selectLikedProgramList(Long memberId) {
+        return sqlSession.selectList(NAMESPACE + "selectLikedProgramList", memberId);
     }
 }

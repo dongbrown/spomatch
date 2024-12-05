@@ -273,6 +273,12 @@ public class ProgramServiceImpl implements ProgramService {
         });
     }
 
+    @Override
+    public List<ProgramDTO> selectLikedProgramList(Long memberId) {
+        List<ProgramDTO> likedPrograms = programDAO.selectLikedProgramList(memberId);
+        return likedPrograms;
+    }
+
     //정규식으로 데이터 정제 ..
     private String cleanAddress(SportsFacilityProgram facility) {
         String cityName = facility.getCityName().trim();

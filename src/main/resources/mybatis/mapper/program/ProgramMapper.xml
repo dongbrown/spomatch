@@ -340,4 +340,27 @@
         FROM facility_program
         ORDER BY progrm_trget_nm
     </select>
+
+    <select id="selectLikedProgramList" parameterType="long" resultType="ProgramDTO">
+        SELECT
+            p.id,
+            p.fclty_nm AS facilityName,
+            p.progrm_nm AS programName,
+            p.ctprvn_nm AS cityName,
+            p.signgu_nm AS districtName,
+            p.progrm_begin_de AS programBeginDate,
+            p.progrm_end_de AS programEndDate,
+            p.progrm_rcrit_nmpr_co AS programRecruitNumber,
+            p.progrm_prc AS programPrice,
+            p.progrm_prc_ty_nm AS programPriceTypeName,
+            p.fclty_tel_no AS facilityPhoneNumber,
+            p.hmpg_url AS homepageUrl
+        FROM
+            facility_program p
+                JOIN
+            program_likes pl ON p.id = pl.program_id
+        WHERE
+            pl.member_id = #{memberId}
+
+    </select>
 </mapper>
