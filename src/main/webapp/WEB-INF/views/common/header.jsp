@@ -8,7 +8,6 @@
         </a>
 
         <nav>
-            <a href="#">주변시설 찾기</a>
             <a href="/program/list">체육 프로그램</a>
             <a href="#">참여마당</a>
             <a href="#">알림마당</a>

@@ -93,6 +93,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .cluster-1 {
@@ -122,4 +123,81 @@ html, body {
     width: 100%;
     text-decoration: none;
     box-sizing: border-box;
+}
+
+/* 위치 버튼 스타일 */
+.location-button {
+    position: absolute;
+    right: 10px;
+    top: 150px;
+    width: 36px;
+    height: 36px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    z-index: 100;
+    transition: background-color 0.3s ease;
+}
+
+.location-button:hover {
+    background-color: #f8f8f8;
+}
+
+.location-button:active {
+    background-color: #f1f1f1;
+}
+
+.location-button svg {
+    width: 20px;
+    height: 20px;
+    fill: #666;
+}
+
+.location-button.loading {
+    animation: rotate 1s linear infinite;
+    opacity: 0.7;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(2);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+/* 에러 메시지 스타일 */
+.error-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f44336;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
+    z-index: 9999;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: opacity 0.3s ease;
+    white-space: pre-line;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
 }

@@ -308,8 +308,10 @@ let clustering = null;
 const dataCache = new Map();
 let toggleStates = {};
 let currentSelectedPrograms = {};
+let currentPositionMarker = null;
+let currentPositionCircle = null;
+let watchPositionId = null;
 
-// 지도 초기화 함수
 function initializeMap() {
     map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(36.3, 127.8),
@@ -322,8 +324,202 @@ function initializeMap() {
         }
     });
 
+    // 현재 위치 버튼 추가
+    const locationButton = document.createElement('div');
+    locationButton.className = 'location-button';
+    locationButton.innerHTML = `
+        <svg viewBox="0 0 24 24">
+            <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+        </svg>
+    `;
+    locationButton.addEventListener('click', moveToCurrentLocation);
+    map.getElement().appendChild(locationButton);
+
+    // 스타일 추가
+    const style = document.createElement('style');
+    style.textContent = `
+        .location-button.loading {
+            animation: rotate 1s linear infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            70% {
+                transform: scale(2);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
     initializeMapEventListeners();
     loadMarkers();
+}
+
+// 현재 위치로 이동하는 함수
+function moveToCurrentLocation() {
+    if (!navigator.geolocation) {
+        showErrorMessage('위치 정보가 지원되지 않는 브라우저입니다.');
+        return;
+    }
+
+    const locationButton = document.querySelector('.location-button');
+    locationButton.style.backgroundColor = '#e1e1e1';
+    locationButton.classList.add('loading');
+
+    let watchId = null;
+
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            reject(new Error('TIMEOUT'));
+        }, 10000);
+    });
+
+    const locationPromise = new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+            resolve,
+            () => {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        if (watchId) navigator.geolocation.clearWatch(watchId);
+                        resolve(position);
+                    },
+                    reject,
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 8000,
+                        maximumAge: 30000
+                    }
+                );
+            },
+            {
+                enableHighAccuracy: false,
+                timeout: 5000,
+                maximumAge: 30000
+            }
+        );
+    });
+    Promise.race([locationPromise, timeoutPromise])
+        .then((position) => {
+            const currentLocation = new naver.maps.LatLng(
+                position.coords.latitude,
+                position.coords.longitude
+            );
+
+            // 기존 현재 위치 마커와 원 제거
+            if (currentPositionMarker) {
+                currentPositionMarker.setMap(null);
+            }
+            if (currentPositionCircle) {
+                currentPositionCircle.setMap(null);
+            }
+
+            // 정확도를 표시하는 원 생성
+            currentPositionCircle = new naver.maps.Circle({
+                map: map,
+                center: currentLocation,
+                radius: position.coords.accuracy || 50,
+                strokeColor: '#4285F4',
+                strokeOpacity: 0.3,
+                strokeWeight: 1,
+                fillColor: '#4285F4',
+                fillOpacity: 0.1
+            });
+
+            // 현재 위치 마커 생성
+            currentPositionMarker = new naver.maps.Marker({
+                position: currentLocation,
+                map: map,
+                icon: {
+                    content: `
+                        <div style="width: 16px; height: 16px; position: relative;">
+                            <div style="width: 16px; height: 16px; background: #4285F4; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); box-sizing: border-box;">
+                                <div style="width: 100%; height: 100%; background: #4285F4; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                            </div>
+                        </div>
+                    `,
+                    anchor: new naver.maps.Point(8, 8)
+                }
+            });
+
+            // 실시간 위치 추적 시작
+            if (watchPositionId) {
+                navigator.geolocation.clearWatch(watchPositionId);
+            }
+
+            watchPositionId = navigator.geolocation.watchPosition(
+                (newPosition) => {
+                    const newLocation = new naver.maps.LatLng(
+                        newPosition.coords.latitude,
+                        newPosition.coords.longitude
+                    );
+
+                    currentPositionMarker.setPosition(newLocation);
+                    currentPositionCircle.setCenter(newLocation);
+                    currentPositionCircle.setRadius(newPosition.coords.accuracy || 50);
+                },
+                (error) => {
+                    console.warn('위치 추적 오류:', error);
+                },
+                {
+                    enableHighAccuracy: false,
+                    maximumAge: 5000,
+                    timeout: 10000
+                }
+            );
+
+            // 부드러운 이동 애니메이션
+            map.panTo(currentLocation, {
+                duration: 500,
+                easing: 'easeOutCubic'
+            });
+
+            setTimeout(() => {
+                map.setZoom(15);
+            }, 500);
+        })
+        .catch((error) => {
+            let errorMessage = '위치 정보를 가져오는데 실패했습니다.';
+
+            if (error.message === 'TIMEOUT') {
+                errorMessage = '위치 정보 요청이 시간 초과되었습니다.\n다음 방법을 시도해보세요:\n'
+                    + '1. 브라우저의 위치 권한을 확인해주세요\n'
+                    + '2. GPS 신호가 잘 잡히는 곳으로 이동해보세요\n'
+                    + '3. 인터넷 연결을 확인해주세요';
+            } else {
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = '위치 정보 접근이 거부되었습니다.\n'
+                            + '브라우저 설정에서 위치 접근 권한을 허용해주세요.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = '위치 정보를 사용할 수 없습니다.\n'
+                            + '1. GPS가 켜져있는지 확인해주세요\n'
+                            + '2. 실외에서 다시 시도해보세요';
+                        break;
+                }
+            }
+            showErrorMessage(errorMessage, 5000);
+        })
+        .finally(() => {
+            locationButton.style.backgroundColor = 'white';
+            locationButton.classList.remove('loading');
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+        });
 }
 
 // 마커 로드 함수
@@ -396,6 +592,7 @@ function updateMarkersAndClusters(facilities) {
         gridSize: getGridSizeByZoom(map.getZoom())
     });
 }
+
 // 정보창 컨텐츠 생성 함수
 function createInfoWindowContent(facility, showDetail, markerId, totalFacilities) {
     const facilities = window[`facilities_${markerId}`];
@@ -496,7 +693,6 @@ function toggleFacilityList(markerId) {
         listElement.style.display = isVisible ? 'none' : 'block';
     }
 }
-
 // 특정 시설의 상세 정보 표시 함수
 function showFacilityDetail(markerId, index) {
     const facilities = window[`facilities_${markerId}`];
@@ -532,6 +728,13 @@ function initializeMapEventListeners() {
             if (clustering) {
                 clustering.redraw();
             }
+        }
+    });
+
+    // 페이지 종료 시 위치 추적 정리
+    window.addEventListener('beforeunload', () => {
+        if (watchPositionId) {
+            navigator.geolocation.clearWatch(watchPositionId);
         }
     });
 }
