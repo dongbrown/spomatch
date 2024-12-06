@@ -155,26 +155,29 @@ header nav a {
     width: 100%;
 }
 
-/* Auth Links */
 .auth-links {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 10px;
+}
+
+.auth-links .member-name {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.auth-links span {
+    color: var(--border-color);
 }
 
 .auth-links a {
     color: var(--text-color);
     text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
+    transition: color 0.2s;
 }
 
 .auth-links a:hover {
     color: var(--primary-color);
-}
-
-.auth-links span {
-    color: var(--border-color);
 }
 
 /* Contact Info */
