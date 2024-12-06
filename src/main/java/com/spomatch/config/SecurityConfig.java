@@ -13,12 +13,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 
 @Configuration
 @Slf4j
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CustomAuthSuccessHandler authSuccessHandler;
+    private final CustomAuthFailureHandler authFailureHandler;
 
 
     @Bean
@@ -26,24 +28,31 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .sessionFixation().none()
-                        .maximumSessions(1)
-                        .maxSessionsPreventsLogin(false)
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/api/auth/status").permitAll()
-                        .anyRequest().permitAll()
-                )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .usernameParameter("loginId")
-                        .passwordParameter("password")
-                        .successHandler(authSuccessHandler)  // 핸들러 사용
-
-                )
+                .sessionManagement(session -> {
+                    session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                            .sessionFixation().none()
+                            .maximumSessions(1)
+                            .maxSessionsPreventsLogin(false);
+                    log.info("세션 관리 설정 완료");
+                })
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/api/auth/status").permitAll()
+                            .anyRequest().permitAll();
+                    log.info("URL 권한 설정 완료");
+                })
+                .formLogin(form -> {
+                    form.loginPage("/login")
+                            .loginProcessingUrl("/login")
+                            .usernameParameter("loginId")
+                            .passwordParameter("password")
+                            .successHandler(authSuccessHandler)
+                            .failureHandler(authFailureHandler);
+                    log.info("로그인 폼 설정 완료");
+                })
+                .requestCache(cache -> {
+                    cache.requestCache(new HttpSessionRequestCache());  // 요청 캐시 설정 추가
+                    log.info("요청 캐시 설정 완료");
+                })
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .addLogoutHandler((request, response, authentication) -> {
@@ -57,8 +66,9 @@ public class SecurityConfig {
                             }
                         })
                         .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setContentType("application/json;charset=UTF-8");
                             response.setStatus(HttpServletResponse.SC_OK);
-                            response.getWriter().write("{\"message\":\"로그아웃 성공\"}");
+                            response.sendRedirect("/?logout=success");  // 로그아웃 파라미터 추가
                         })
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)

@@ -38,6 +38,17 @@
             transform: scale(1.05);
         }
     </style>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('logout') === 'success') {
+                alert('로그아웃 되었습니다.');
+                // alert 표시 후 URL에서 파라미터 제거
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+    </script>
 </head>
 <body>
 <!-- 헤더 -->
@@ -234,7 +245,7 @@
             });
 
             if (response.ok) {
-                window.location.href = '/';  // 홈페이지로 리다이렉트
+                window.location.href = '/?logout=success';  // logout 파라미터 추가
             }
         } catch (error) {
             console.error('로그아웃 실패:', error);
