@@ -171,9 +171,20 @@
         body: JSON.stringify(formData)
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         alert('회원가입이 완료되었습니다.');
-        window.location.href = '/';
+        // 이전 페이지로 리다이렉트
+        if (data.redirectUrl) {
+          window.location.href = data.redirectUrl;
+        } else if (document.referrer && !document.referrer.includes('/register')) {
+          // 서버에서 리다이렉트 URL을 제공하지 않는 경우 document.referrer 사용
+          window.location.href = document.referrer;
+        } else {
+          // 이전 페이지가 없거나 회원가입 페이지인 경우 메인으로
+          window.location.href = '/';
+        }
       } else {
         const errorData = await response.json();
         alert(errorData.message || '회원가입에 실패했습니다.');
@@ -181,6 +192,14 @@
     } catch (error) {
       console.error('Error:', error);
       alert('회원가입 처리 중 오류가 발생했습니다.');
+    }
+  });
+
+  // 페이지 로드 시 이전 페이지 URL 저장
+  document.addEventListener('DOMContentLoaded', () => {
+    const prevPage = document.referrer;
+    if (prevPage && !prevPage.includes('/register')) {
+      sessionStorage.setItem('prevPage', prevPage);
     }
   });
 </script>
