@@ -7,6 +7,7 @@ import com.spomatch.dto.response.ProgramListResponseDTO;
 import com.spomatch.entity.Member;
 import com.spomatch.service.MemberService;
 import com.spomatch.service.ProgramService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,15 @@ public class MemberController {
         Member savedMember = memberService.save(request.toEntity());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new MemberResponse(savedMember));
+    }
+
+    @PostMapping("/logout")
+    public String logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return "redirect:/";
     }
 
     // 찜 목록 확인 API

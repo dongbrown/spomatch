@@ -11,14 +11,14 @@
     <link rel="stylesheet" href="/resources/css/common/style.css">
     <link rel="stylesheet" href="/resources/css/program/common.css">
     <link rel="stylesheet" href="/resources/css/program/detail.css">
+    <link rel="stylesheet" href="/resources/css/map.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=1eruck1cfu"></script>
 </head>
 <body>
 <c:import url="/WEB-INF/views/common/header.jsp" />
 
-<!-- 메인 비주얼 -->
-<section class="main-visual">
+<section class="main-visual" style="margin-top: var(--header-height);">
     <div class="container mx-auto py-8">
         <div class="flex space-x-8">
             <!-- 왼쪽: 지도 영역 -->

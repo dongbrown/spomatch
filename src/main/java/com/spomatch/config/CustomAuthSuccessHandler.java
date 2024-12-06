@@ -32,11 +32,14 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
         Member member = memberRepository.findByLoginId(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
+        // memberId와 함께 name도 세션에 저장
         session.setAttribute("memberId", member.getId());
+        session.setAttribute("memberName", member.getName());
 
-        log.info("로그인 성공! 세션 ID: {}, memberId: {}",
+        log.info("로그인 성공! 세션 ID: {}, memberId: {}, memberName: {}",
                 session.getId(),
-                session.getAttribute("memberId"));
+                session.getAttribute("memberId"),
+                session.getAttribute("memberName"));
 
         response.sendRedirect("/");
     }

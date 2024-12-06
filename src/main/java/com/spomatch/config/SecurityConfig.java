@@ -46,25 +46,11 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .addLogoutHandler((request, response, authentication) -> {
-                            // 로그아웃 전에 세션 ID 로깅
-                            HttpSession session = request.getSession(false);
-                            if (session != null) {
-                                String sessionId = session.getId();
-                                String username = authentication != null ? authentication.getName() : "Unknown";
-                                log.info("로그아웃 시작! 세션 ID: {}", sessionId);
-                                log.info("로그아웃 사용자: {}", username);
-                            }
-                        })
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                            response.getWriter().write("{\"message\":\"로그아웃 성공\"}");
-                        })
+                        .logoutSuccessUrl("/")  // logoutSuccessHandler 대신 logoutSuccessUrl 사용
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                 );
-
         return http.build();
     }
 

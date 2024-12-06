@@ -1,0 +1,125 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+#map {
+    position: relative;
+    width: 100%;
+    z-index: 1;
+}
+
+/* 왼쪽 메뉴 스타일 */
+.side-menu {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 600px;
+    background-color: white;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.menu-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.menu-items {
+    padding: 20px 0;
+    flex-grow: 1;
+}
+
+.menu-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+    color: #2196F3;
+    background-color: #f5f5f5;
+}
+
+/* 인증 영역 스타일 */
+.auth-section {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    font-size: 13px;
+    color: #666;
+}
+
+.auth-button {
+    flex: 1;
+    text-align: center;
+    color: #666;
+    transition: color 0.2s ease;
+    text-decoration: none;
+}
+
+.auth-button:hover {
+    color: #2196F3;
+}
+
+.auth-divider {
+    padding: 0 10px;
+    color: #ddd;
+}
+
+/* 클러스터 스타일 */
+.cluster {
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cluster-1 {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: rgba(33, 150, 243, 0.6);
+}
+
+.cluster-2 {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: rgba(33, 150, 243, 0.7);
+}
+
+.cluster-3 {
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
+    background-color: rgba(33, 150, 243, 0.8);
+}
+
+/* 메뉴 아이템 a 태그 스타일 */
+.menu-items a.menu-item {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+    box-sizing: border-box;
+}
