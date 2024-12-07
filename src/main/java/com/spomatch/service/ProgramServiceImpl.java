@@ -19,15 +19,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -173,39 +173,129 @@ public class ProgramServiceImpl implements ProgramService {
     @Override
     @Transactional
     public void importJsonData(String filePath) {
+        StringBuilder summary = new StringBuilder();
+        int coordinatesUpdated = 0;
+
         try {
-            // ClassPathResource를 사용하여 리소스 접근
             Resource resource = new ClassPathResource("data/publicProgram.json");
-            List<SportsFacilityProgram> programs = Arrays.asList(
+
+            // 1. JSON 파일 읽기
+            List<SportsFacilityProgram> initialPrograms = Arrays.asList(
                     objectMapper.readValue(resource.getInputStream(), SportsFacilityProgram[].class));
 
-            int batchSize = 1000;
-            int totalSize = programs.size();
-            long startTime = System.currentTimeMillis();
+            // 2. 중복 확인을 위한 맵 생성
+            Map<String, List<SportsFacilityProgram>> duplicatesMap = initialPrograms.stream()
+                    .collect(Collectors.groupingBy(this::generateCompositeId));
 
-            for (int i = 0; i < totalSize; i += batchSize) {
-                List<SportsFacilityProgram> batch = programs.subList(
-                        i, Math.min(totalSize, i + batchSize)
-                );
-
-                for (SportsFacilityProgram program : batch) {
-                    entityManager.persist(program);
+            // 중복 프로그램 정보 수집
+            List<String> duplicateInfos = new ArrayList<>();
+            duplicatesMap.forEach((compositeId, programs) -> {
+                if (programs.size() > 1) {
+                    SportsFacilityProgram program = programs.get(0);
+                    duplicateInfos.add(String.format("시설: %s, 프로그램: %s, 시작일: %s, 시간: %s (%d개)",
+                            program.getFacilityName(),
+                            program.getProgramName(),
+                            program.getProgramBeginDate(),
+                            program.getProgramOperationTime(),
+                            programs.size()));
                 }
+            });
 
-                entityManager.flush();
-                entityManager.clear();
+            // 중복 제거된 프로그램 리스트
+            List<SportsFacilityProgram> jsonPrograms = duplicatesMap.values().stream()
+                    .map(list -> list.get(0))
+                    .collect(Collectors.toList());
 
-                int processedCount = Math.min(i + batchSize, totalSize);
-                updateAndLogProgress(startTime, processedCount, totalSize);
+            // 기존 데이터 확인 및 새로운 데이터 필터링
+            Set<String> existingCompositeIds = programRepository.findAll().stream()
+                    .map(this::generateCompositeId)
+                    .collect(Collectors.toSet());
+
+            List<SportsFacilityProgram> newPrograms = jsonPrograms.stream()
+                    .filter(program -> !existingCompositeIds.contains(generateCompositeId(program)))
+                    .collect(Collectors.toList());
+
+            // 데이터 저장
+            int savedCount = 0;
+            if (!newPrograms.isEmpty()) {
+                int batchSize = 1000;
+                int totalSize = newPrograms.size();
+                long startTime = System.currentTimeMillis();
+
+                for (int i = 0; i < totalSize; i += batchSize) {
+                    List<SportsFacilityProgram> batch = newPrograms.subList(
+                            i, Math.min(totalSize, i + batchSize)
+                    );
+
+                    for (SportsFacilityProgram program : batch) {
+                        entityManager.persist(program);
+                        savedCount++;
+                    }
+
+                    entityManager.flush();
+                    entityManager.clear();
+
+                    updateAndLogProgress(startTime, i + batch.size(), totalSize);
+                }
             }
 
-            long totalTime = (System.currentTimeMillis() - startTime) / 1000;
-            log.info("Import completed. Total time: {}s", totalTime);
+            // 종합 결과 로그 출력
+            summary.append("\n=== 데이터 임포트 결과 요약 ===\n");
+            summary.append(String.format("- 전체 읽은 데이터: %d개\n", initialPrograms.size()));
+            summary.append(String.format("- 중복 제거 후 데이터: %d개\n", jsonPrograms.size()));
+            summary.append(String.format("- 기존 DB 데이터: %d개\n", existingCompositeIds.size()));
+            summary.append(String.format("- 새로 저장된 데이터: %d개\n", savedCount));
+
+            if (!duplicateInfos.isEmpty()) {
+                summary.append("\n=== 중복 데이터 목록 ===\n");
+                duplicateInfos.forEach(info -> summary.append("- ").append(info).append("\n"));
+            }
+
+            // 좌표 업데이트 실행 및 결과 추가
+            if (savedCount > 0) {
+                List<SportsFacilityProgram> facilitiesWithoutCoords = programRepository.findByLatitudeIsNull();
+                coordinatesUpdated = facilitiesWithoutCoords.size();
+
+                summary.append("\n=== 좌표 업데이트 결과 ===\n");
+                summary.append(String.format("- 좌표 업데이트 대상: %d개\n", coordinatesUpdated));
+
+                updateCoordinates();  // 좌표 업데이트 실행
+            }
+
+            summary.append("\n=== 전체 작업 완료 ===");
+            log.info(summary.toString());
 
         } catch (Exception e) {
             log.error("Failed to import JSON", e);
             throw new RuntimeException("JSON 파일 처리 중 오류 발생", e);
         }
+    }
+
+
+    // 중복 제거를 위한 helper 메서드
+    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
+    }
+
+
+    private String generateCompositeId(SportsFacilityProgram program) {
+        return String.format("%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s",
+                program.getFacilityName(),          // 시설명 (FCLTY_NM)
+                program.getDistrictName(),          // 구군명 (SIGNGU_NM)
+                program.getFacilityTypeName(),      // 시설유형명 (FCLTY_TY_NM)
+                program.getCityName(),              // 시도명 (CTPRVN_NM)
+                program.getProgramName(),           // 프로그램명 (PROGRM_NM)
+                program.getProgramTypeName(),       // 프로그램 유형명 (PROGRM_TY_NM)
+                program.getProgramTargetName(),     // 프로그램 대상명 (PROGRM_TRGET_NM)
+                program.getProgramBeginDate(),      // 프로그램 시작일자 (PROGRM_BEGIN_DE)
+                program.getProgramEndDate(),        // 프로그램 종료일자 (PROGRM_END_DE)
+                program.getProgramOperationDays(),  // 프로그램 개설요일명 (PROGRM_ESTBL_WKDAY_NM)
+                program.getProgramOperationTime(),  // 프로그램 개설시간대값 (PROGRM_ESTBL_TIZN_VALUE)
+                program.getProgramPrice(),          // 프로그램 가격 (PROGRM_PRC)
+                program.getProgramPriceTypeName(),  // 프로그램가격유형명 (PROGRM_PRC_TY_NM)
+                program.getProgramRecruitNumber()   // 프로그램 모집인원수 (PROGRM_RCRIT_NMPR_CO)
+        ).toLowerCase().replaceAll("\\s+", "");
     }
 
     @Override
@@ -230,15 +320,35 @@ public class ProgramServiceImpl implements ProgramService {
 
     //시설 이름으로 위도/경도 추출 후 db에 저장하는 기능
     @Override
+    @Transactional
     public void updateCoordinates() {
         List<SportsFacilityProgram> facilities = programRepository.findByLatitudeIsNull();
         log.info("Found {} facilities without coordinates", facilities.size());
 
+
+        // 좌표가 없는 데이터가 없으면 메서드 종료
+        if (facilities.isEmpty()) {
+            log.info("No facilities need coordinate updates");
+            return;
+        }
+
         facilities.parallelStream().forEach(facility -> {
             try {
+                // 주소가 null인 경우 스킵
+                if (facility.getFacilityAddress() == null) {
+                    log.warn("Skipping facility '{}': No address available", facility.getFacilityName());
+                    return;
+                }
+
+                // 이미 좌표가 있는 경우 스킵 (안전장치)
+                if (facility.getLatitude() != null && facility.getLongitude() != null) {
+                    log.info("Skipping facility '{}': Coordinates already exist", facility.getFacilityName());
+                    return;
+                }
+
                 Thread.sleep(50);
                 String fullAddress = cleanAddress(facility);
-                log.info("Processing address: {}", fullAddress);
+                log.info("Processing facility '{}' with address: {}", facility.getFacilityName(), fullAddress);
 
                 String address = URLEncoder.encode(fullAddress, StandardCharsets.UTF_8);
                 String apiUrl = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" + address;
@@ -250,7 +360,6 @@ public class ProgramServiceImpl implements ProgramService {
 
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode response = mapper.readTree(conn.getInputStream());
-                log.info("API Response: {}", response);
 
                 JsonNode addresses = response.get("addresses");
                 if (addresses != null && addresses.size() > 0) {
@@ -258,20 +367,24 @@ public class ProgramServiceImpl implements ProgramService {
                     double latitude = Double.parseDouble(addressNode.get("y").asText());
                     double longitude = Double.parseDouble(addressNode.get("x").asText());
 
-                    log.info("Got coordinates: lat={}, lng={}", latitude, longitude);
+                    log.info("Got coordinates for facility '{}': lat={}, lng={}",
+                            facility.getFacilityName(), latitude, longitude);
 
                     facility.setLatitude(latitude);
                     facility.setLongitude(longitude);
                     programRepository.save(facility);
-                    log.info("Saved coordinates for: {}", facility.getFacilityName());
+                    log.info("Successfully updated coordinates for facility: {}", facility.getFacilityName());
                 } else {
-                    log.warn("No coordinates found for address: {}", fullAddress);
+                    log.warn("No coordinates found for facility '{}' with address: {}",
+                            facility.getFacilityName(), fullAddress);
                 }
             } catch (Exception e) {
-                log.error("Error updating facility: {} - {}", facility.getFacilityName(), e.getMessage(), e);
+                log.error("Error updating coordinates for facility '{}': {}",
+                        facility.getFacilityName(), e.getMessage());
             }
         });
     }
+
 
     @Override
     public List<ProgramDTO> selectLikedProgramList(Long memberId) {
