@@ -3,65 +3,31 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.spomatch.dao.ProgramDAO">
-    <!-- 프로그램 목록 조회 -->
+    <!-- 시설 기준으로 프로그램 목록 조회 -->
     <select id="selectProgramList" parameterType="ProgramSearchRequestDTO" resultType="ProgramDTO">
+        WITH FacilityGroups AS (
         SELECT
-        fp.id,
-        fp.cityCode,
-        fp.cityName,
-        fp.districtCode,
-        fp.districtName,
-        fp.educationGoalContent,
-        fp.facilityAddress,
-        fp.facilityName,
-        fp.facilityPhoneNumber,
-        fp.facilityTypeName,
-        fp.homepageUrl,
-        fp.leaderQualificationContent,
-        fp.programBeginDate,
-        fp.programEndDate,
-        fp.programName,
-        fp.programOperationDays,
-        fp.programOperationTime,
-        fp.programPrice,
-        fp.programPriceTypeName,
-        fp.programRecruitNumber,
-        fp.programTargetName,
-        fp.programTypeName,
-        fp.protectorParticipationYn,
-        fp.safetyManagementContent,
-        fp.viewCount,
-        fp.createdAt,
-        COALESCE(pl.like_count, 0) as likeCount
-        FROM (
-        SELECT
-        id,
-        ctprvn_cd as cityCode,
-        ctprvn_nm as cityName,
-        signgu_cd as districtCode,
-        signgu_nm as districtName,
-        edc_goal_cn as educationGoalContent,
-        fclty_addr as facilityAddress,
-        fclty_nm as facilityName,
-        fclty_tel_no as facilityPhoneNumber,
-        fclty_ty_nm as facilityTypeName,
-        hmpg_url as homepageUrl,
-        ldr_qualfc_cn as leaderQualificationContent,
-        progrm_begin_de as programBeginDate,
-        progrm_end_de as programEndDate,
-        progrm_nm as programName,
-        progrm_estbl_wkday_nm as programOperationDays,
-        progrm_estbl_tizn_value as programOperationTime,
-        progrm_prc as programPrice,
-        progrm_prc_ty_nm as programPriceTypeName,
-        progrm_rcrit_nmpr_co as programRecruitNumber,
-        progrm_trget_nm as programTargetName,
-        progrm_ty_nm as programTypeName,
-        prtc_nmpr_partcpt_at as protectorParticipationYn,
-        safe_managt_cn as safetyManagementContent,
-        view_count as viewCount,
-        created_at as createdAt
-        FROM facility_program
+        fclty_nm,
+        COUNT(*) as program_count,
+        ROW_NUMBER() OVER (
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'popularity'">
+                MAX(COALESCE((
+                SELECT COUNT(*)
+                FROM program_likes
+                WHERE program_id = fp.id
+                ), 0)) DESC
+            </when>
+            <when test="sortBy == 'deadline'">
+                MIN(progrm_end_de) ASC
+            </when>
+            <otherwise>
+                MAX(created_at) DESC
+            </otherwise>
+        </choose>
+        ) as facility_rank
+        FROM facility_program fp
         WHERE 1=1
         <if test="cityName != null and cityName != ''">
             AND ctprvn_nm = #{cityName}
@@ -139,29 +105,45 @@
             AND progrm_prc <= #{maxPrice}
             ]]>
         </if>
-        ) fp
-        LEFT JOIN (
-        SELECT program_id, COUNT(*) as like_count
+        GROUP BY fclty_nm
+        )
+        SELECT
+        fp.id,
+        fp.ctprvn_cd as cityCode,
+        fp.ctprvn_nm as cityName,
+        fp.signgu_cd as districtCode,
+        fp.signgu_nm as districtName,
+        fp.edc_goal_cn as educationGoalContent,
+        fp.fclty_addr as facilityAddress,
+        fp.fclty_nm as facilityName,
+        fp.fclty_tel_no as facilityPhoneNumber,
+        fp.fclty_ty_nm as facilityTypeName,
+        fp.hmpg_url as homepageUrl,
+        fp.ldr_qualfc_cn as leaderQualificationContent,
+        fp.progrm_begin_de as programBeginDate,
+        fp.progrm_end_de as programEndDate,
+        fp.progrm_nm as programName,
+        fp.progrm_estbl_wkday_nm as programOperationDays,
+        fp.progrm_estbl_tizn_value as programOperationTime,
+        fp.progrm_prc as programPrice,
+        fp.progrm_prc_ty_nm as programPriceTypeName,
+        fp.progrm_rcrit_nmpr_co as programRecruitNumber,
+        fp.progrm_trget_nm as programTargetName,
+        fp.progrm_ty_nm as programTypeName,
+        fp.prtc_nmpr_partcpt_at as protectorParticipationYn,
+        fp.safe_managt_cn as safetyManagementContent,
+        fp.view_count as viewCount,
+        fp.created_at as createdAt,
+        COALESCE((
+        SELECT COUNT(*)
         FROM program_likes
-        GROUP BY program_id
-        ) pl ON fp.id = pl.program_id
-        <choose>
-            <when test="sortBy == 'popularity'">
-                ORDER BY pl.like_count DESC, fp.viewCount DESC
-            </when>
-            <when test="sortBy == 'deadline'">
-                ORDER BY
-                CASE
-                WHEN fp.programEndDate >= CURRENT_DATE THEN 0
-                ELSE 1
-                END,
-                fp.programEndDate ASC
-            </when>
-            <otherwise>
-                ORDER BY fp.createdAt DESC
-            </otherwise>
-        </choose>
-        LIMIT #{start}, #{pageSize}
+        WHERE program_id = fp.id
+        ), 0) as likeCount,
+        fg.program_count
+        FROM facility_program fp
+        INNER JOIN FacilityGroups fg ON fp.fclty_nm = fg.fclty_nm
+        WHERE fg.facility_rank BETWEEN #{start} + 1 AND #{start} + #{pageSize}
+        ORDER BY fg.facility_rank, fp.created_at DESC;
     </select>
 
     <!-- 프로그램 전체 개수 조회 -->
