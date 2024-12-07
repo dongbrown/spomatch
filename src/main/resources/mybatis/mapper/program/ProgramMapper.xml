@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
@@ -40,7 +39,7 @@
         </if>
         <if test="events != null and events.size > 0">
             AND (
-            <foreach item="event" collection="events" separator=" OR ">
+            <foreach item="event" collection="events" separator=" OR " open="(" close=")">
                 <choose>
                     <when test="event == '수영'">
                         progrm_nm LIKE CONCAT('%', '수영', '%')
@@ -90,20 +89,20 @@
             )
         </if>
         <if test="weekdays != null and weekdays.size > 0">
-            AND progrm_estbl_wkday_nm IN
-            <foreach item="day" collection="weekdays" open="(" separator="," close=")">
-                #{day}
+            AND
+            <foreach item="day" collection="weekdays" separator="OR" open="(" close=")">
+                REGEXP_LIKE(progrm_estbl_wkday_nm, #{day})
             </foreach>
         </if>
         <if test="minPrice != null">
             <![CDATA[
-            AND progrm_prc >= #{minPrice}
-            ]]>
+                AND progrm_prc >= #{minPrice}
+                ]]>
         </if>
         <if test="maxPrice != null">
             <![CDATA[
-            AND progrm_prc <= #{maxPrice}
-            ]]>
+                AND progrm_prc <= #{maxPrice}
+                ]]>
         </if>
         GROUP BY fclty_nm
         )
@@ -145,7 +144,6 @@
         WHERE fg.facility_rank BETWEEN #{start} + 1 AND #{start} + #{pageSize}
         ORDER BY fg.facility_rank, fp.created_at DESC;
     </select>
-
     <!-- 프로그램 전체 개수 조회 -->
     <select id="selectProgramCount" parameterType="ProgramSearchRequestDTO" resultType="int">
         SELECT COUNT(*)
@@ -168,45 +166,45 @@
         </if>
         <if test="minPrice != null">
             <![CDATA[
-            AND progrm_prc >= #{minPrice}
-            ]]>
+        AND progrm_prc >= #{minPrice}
+        ]]>
         </if>
         <if test="maxPrice != null">
             <![CDATA[
-            AND progrm_prc <= #{maxPrice}
-            ]]>
+        AND progrm_prc <= #{maxPrice}
+        ]]>
         </if>
     </select>
 
     <!-- 프로그램 상세 조회 -->
     <select id="selectProgramDetail" parameterType="long" resultType="ProgramDTO">
         SELECT
-            id,
-            ctprvn_cd as cityCode,
-            ctprvn_nm as cityName,
-            signgu_cd as districtCode,
-            signgu_nm as districtName,
-            edc_goal_cn as educationGoalContent,
-            fclty_addr as facilityAddress,
-            fclty_nm as facilityName,
-            fclty_tel_no as facilityPhoneNumber,
-            fclty_ty_nm as facilityTypeName,
-            hmpg_url as homepageUrl,
-            ldr_qualfc_cn as leaderQualificationContent,
-            progrm_begin_de as programBeginDate,
-            progrm_end_de as programEndDate,
-            progrm_nm as programName,
-            progrm_estbl_wkday_nm as programOperationDays,
-            progrm_estbl_tizn_value as programOperationTime,
-            progrm_prc as programPrice,
-            progrm_prc_ty_nm as programPriceTypeName,
-            progrm_rcrit_nmpr_co as programRecruitNumber,
-            progrm_trget_nm as programTargetName,
-            progrm_ty_nm as programTypeName,
-            prtc_nmpr_partcpt_at as protectorParticipationYn,
-            safe_managt_cn as safetyManagementContent,
-            view_count as viewCount,
-            created_at as createdAt
+        id,
+        ctprvn_cd as cityCode,
+        ctprvn_nm as cityName,
+        signgu_cd as districtCode,
+        signgu_nm as districtName,
+        edc_goal_cn as educationGoalContent,
+        fclty_addr as facilityAddress,
+        fclty_nm as facilityName,
+        fclty_tel_no as facilityPhoneNumber,
+        fclty_ty_nm as facilityTypeName,
+        hmpg_url as homepageUrl,
+        ldr_qualfc_cn as leaderQualificationContent,
+        progrm_begin_de as programBeginDate,
+        progrm_end_de as programEndDate,
+        progrm_nm as programName,
+        progrm_estbl_wkday_nm as programOperationDays,
+        progrm_estbl_tizn_value as programOperationTime,
+        progrm_prc as programPrice,
+        progrm_prc_ty_nm as programPriceTypeName,
+        progrm_rcrit_nmpr_co as programRecruitNumber,
+        progrm_trget_nm as programTargetName,
+        progrm_ty_nm as programTypeName,
+        prtc_nmpr_partcpt_at as protectorParticipationYn,
+        safe_managt_cn as safetyManagementContent,
+        view_count as viewCount,
+        created_at as createdAt
         FROM facility_program
         WHERE id = #{programId}
     </select>
@@ -221,71 +219,85 @@
     <!-- 찜하기 상태 확인 -->
     <select id="checkLikeStatus" parameterType="map" resultType="boolean">
         SELECT EXISTS(
-            SELECT 1
-            FROM program_likes
-            WHERE program_id = #{programId}
-              AND member_id = #{userId}
+        SELECT 1
+        FROM program_likes
+        WHERE program_id = #{programId}
+        AND member_id = #{memberId}
         ) as exists_flag
     </select>
 
     <!-- 찜하기 추가 -->
     <insert id="insertProgramLike" parameterType="map">
         INSERT INTO program_likes (
-            program_id,
-            member_id,
-            created_at
+        program_id,
+        member_id,
+        created_at
         ) VALUES (
-                     #{programId},
-                     #{userId},
-                     NOW()
-                 )
+        #{programId},
+        #{memberId},
+        NOW()
+        )
     </insert>
 
     <!-- 찜하기 삭제 -->
     <delete id="deleteProgramLike" parameterType="map">
         DELETE FROM program_likes
         WHERE program_id = #{programId}
-          AND member_id = #{userId}
+        AND member_id = #{memberId}
     </delete>
+
+    <!-- 찜하기 개수 조회 -->
+    <select id="selectLikeCount" parameterType="long" resultType="long">
+        SELECT COUNT(*)
+        FROM program_likes
+        WHERE program_id = #{programId}
+    </select>
+
+    <!-- 신청 인원 조회 -->
+    <select id="selectRegisterCount" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM program_registers
+        WHERE program_id = #{programId}
+    </select>
 
     <!-- 추천 프로그램 조회 -->
     <select id="selectRecommendedPrograms" parameterType="map" resultType="ProgramDTO">
         SELECT
-            p.id,
-            p.ctprvn_cd as cityCode,
-            p.ctprvn_nm as cityName,
-            p.signgu_cd as districtCode,
-            p.signgu_nm as districtName,
-            p.edc_goal_cn as educationGoalContent,
-            p.fclty_addr as facilityAddress,
-            p.fclty_nm as facilityName,
-            p.fclty_tel_no as facilityPhoneNumber,
-            p.fclty_ty_nm as facilityTypeName,
-            p.hmpg_url as homepageUrl,
-            p.ldr_qualfc_cn as leaderQualificationContent,
-            p.progrm_begin_de as programBeginDate,
-            p.progrm_end_de as programEndDate,
-            p.progrm_nm as programName,
-            p.progrm_estbl_wkday_nm as programOperationDays,
-            p.progrm_estbl_tizn_value as programOperationTime,
-            p.progrm_prc as programPrice,
-            p.progrm_prc_ty_nm as programPriceTypeName,
-            p.progrm_rcrit_nmpr_co as programRecruitNumber,
-            p.progrm_trget_nm as programTargetName,
-            p.progrm_ty_nm as programTypeName,
-            p.prtc_nmpr_partcpt_at as protectorParticipationYn,
-            p.safe_managt_cn as safetyManagementContent,
-            p.view_count as viewCount,
-            p.created_at as createdAt
+        p.id,
+        p.ctprvn_cd as cityCode,
+        p.ctprvn_nm as cityName,
+        p.signgu_cd as districtCode,
+        p.signgu_nm as districtName,
+        p.edc_goal_cn as educationGoalContent,
+        p.fclty_addr as facilityAddress,
+        p.fclty_nm as facilityName,
+        p.fclty_tel_no as facilityPhoneNumber,
+        p.fclty_ty_nm as facilityTypeName,
+        p.hmpg_url as homepageUrl,
+        p.ldr_qualfc_cn as leaderQualificationContent,
+        p.progrm_begin_de as programBeginDate,
+        p.progrm_end_de as programEndDate,
+        p.progrm_nm as programName,
+        p.progrm_estbl_wkday_nm as programOperationDays,
+        p.progrm_estbl_tizn_value as programOperationTime,
+        p.progrm_prc as programPrice,
+        p.progrm_prc_ty_nm as programPriceTypeName,
+        p.progrm_rcrit_nmpr_co as programRecruitNumber,
+        p.progrm_trget_nm as programTargetName,
+        p.progrm_ty_nm as programTypeName,
+        p.prtc_nmpr_partcpt_at as protectorParticipationYn,
+        p.safe_managt_cn as safetyManagementContent,
+        p.view_count as viewCount,
+        p.created_at as createdAt
         FROM facility_program p
         WHERE EXISTS (
-            SELECT 1
-            FROM program_likes l
-            WHERE l.member_id = #{userId}
-              AND l.program_id = p.id
+        SELECT 1
+        FROM program_likes l
+        WHERE l.member_id = #{memberId}
+        AND l.program_id = p.id
         )
         ORDER BY p.created_at DESC
-            LIMIT #{limit}
+        LIMIT #{limit}
     </select>
 
     <!-- 시도 목록 조회 -->
@@ -323,26 +335,38 @@
         ORDER BY progrm_trget_nm
     </select>
 
+    <!-- 찜한 프로그램 목록 조회 -->
     <select id="selectLikedProgramList" parameterType="long" resultType="ProgramDTO">
         SELECT
-            p.id,
-            p.fclty_nm AS facilityName,
-            p.progrm_nm AS programName,
-            p.ctprvn_nm AS cityName,
-            p.signgu_nm AS districtName,
-            p.progrm_begin_de AS programBeginDate,
-            p.progrm_end_de AS programEndDate,
-            p.progrm_rcrit_nmpr_co AS programRecruitNumber,
-            p.progrm_prc AS programPrice,
-            p.progrm_prc_ty_nm AS programPriceTypeName,
-            p.fclty_tel_no AS facilityPhoneNumber,
-            p.hmpg_url AS homepageUrl
-        FROM
-            facility_program p
-                JOIN
-            program_likes pl ON p.id = pl.program_id
-        WHERE
-            pl.member_id = #{memberId}
-
+        p.id,
+        p.ctprvn_cd as cityCode,
+        p.ctprvn_nm as cityName,
+        p.signgu_cd as districtCode,
+        p.signgu_nm as districtName,
+        p.edc_goal_cn as educationGoalContent,
+        p.fclty_addr as facilityAddress,
+        p.fclty_nm as facilityName,
+        p.fclty_tel_no as facilityPhoneNumber,
+        p.fclty_ty_nm as facilityTypeName,
+        p.hmpg_url as homepageUrl,
+        p.ldr_qualfc_cn as leaderQualificationContent,
+        p.progrm_begin_de as programBeginDate,
+        p.progrm_end_de as programEndDate,
+        p.progrm_nm as programName,
+        p.progrm_estbl_wkday_nm as programOperationDays,
+        p.progrm_estbl_tizn_value as programOperationTime,
+        p.progrm_prc as programPrice,
+        p.progrm_prc_ty_nm as programPriceTypeName,
+        p.progrm_rcrit_nmpr_co as programRecruitNumber,
+        p.progrm_trget_nm as programTargetName,
+        p.progrm_ty_nm as programTypeName,
+        p.prtc_nmpr_partcpt_at as protectorParticipationYn,
+        p.safe_managt_cn as safetyManagementContent,
+        p.view_count as viewCount,
+        p.created_at as createdAt
+        FROM facility_program p
+        INNER JOIN program_likes pl ON p.id = pl.program_id
+        WHERE pl.member_id = #{memberId}
+        ORDER BY pl.created_at DESC
     </select>
 </mapper>
