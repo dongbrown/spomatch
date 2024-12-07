@@ -92,57 +92,117 @@ $(document).ready(function() {
         });
     }
 
-    // 프로그램 목록 업데이트
     function updateProgramList(response) {
         const programList = $('.program-list');
         programList.empty();
 
         if (response.programs && response.programs.length > 0) {
-            const fragment = document.createDocumentFragment();
+            // 시설별로 프로그램 그룹화
+            const facilitiesMap = new Map();
 
             response.programs.forEach(program => {
-                const selectedEvent = $('select[name="event"]').val();
-                let programName = program.programName || '';
-
-                // 선택된 종목이 있으면 하이라이트 처리
-                if (selectedEvent && programName.includes(selectedEvent)) {
-                    programName = programName.replace(
-                        new RegExp(selectedEvent, 'g'),
-                        `<span class="highlight">${selectedEvent}</span>`
-                    );
+                if (!facilitiesMap.has(program.facilityName)) {
+                    facilitiesMap.set(program.facilityName, {
+                        facilityName: program.facilityName,
+                        cityName: program.cityName,
+                        districtName: program.districtName,
+                        programs: []
+                    });
                 }
+                facilitiesMap.get(program.facilityName).programs.push(program);
+            });
 
-                const card = document.createElement('div');
-                card.className = 'program-card';
-                card.dataset.programId = program.id || '';
-                card.innerHTML = `
+            const fragment = document.createDocumentFragment();
+
+            // 각 시설별 카드 생성
+            facilitiesMap.forEach((facilityData) => {
+                const facilityCard = document.createElement('div');
+                facilityCard.className = 'program-card';
+
+                if (facilityData.programs.length === 1) {
+                    // 단일 프로그램 카드
+                    const program = facilityData.programs[0];
+                    facilityCard.dataset.programId = program.id;
+                    // 단일 프로그램 카드에서 시설명 부분 수정
+                    facilityCard.innerHTML = `
+                        <div class="program-info">
+                            <div class="title-section">
+                                <div class="program-title">${program.programName}</div>
+                                <div class="view-count">
+                                    <i class="fas fa-eye"></i>
+                                    <span>${program.viewCount || 0}</span>
+                                </div>
+                            </div>
+                            <p class="facility-name">${program.facilityName}</p>
+                            <p class="location">${program.cityName} ${program.districtName}</p>
+                            <p class="schedule">${program.programOperationDays || ''} ${program.programOperationTime || ''}</p>
+                            <p class="price">${formatPrice(program.programPrice || 0)}원</p>
+                            <p class="target">${program.programTargetName || ''}</p>
+                        </div>
+                    `;
+                } else {
+                    // 다수 프로그램 카드
+                    facilityCard.className = 'program-card facility-group';
+                    const mainProgram = facilityData.programs[0];
+
+                    const facilityHeader = document.createElement('div');
+                    facilityHeader.className = 'facility-header';
+                    facilityHeader.innerHTML = `
                     <div class="program-info">
                         <div class="title-section">
-                            <div class="program-title" title="${program.programName}">
-                                ${programName}
-                            </div>
-                            <div class="view-count">
-                                <i class="fas fa-eye"></i>
-                                <span>${program.viewCount || 0}</span>
-                            </div>
+                            <div class="facility-title">${facilityData.facilityName}</div>
+                            <div class="toggle-icon">▼</div>
                         </div>
-                        <p class="facility">${program.facilityName || ''}</p>
-                        <p class="location">${program.cityName || ''} ${program.districtName || ''}</p>
-                        <p class="schedule">
-                            ${program.programOperationDays || ''} ${program.programOperationTime || ''}
-                        </p>
-                        <p class="price">${formatPrice(program.programPrice || 0)}원</p>
-                        <p class="target">${program.programTargetName || ''}</p>
+                        <p class="program-summary">${mainProgram.programName} 외 ${facilityData.programs.length - 1}개 프로그램</p>
+                        <p class="location">${facilityData.cityName} ${facilityData.districtName}</p>
                     </div>
                 `;
 
-                fragment.appendChild(card);
+                    const programsContainer = document.createElement('div');
+                    programsContainer.className = 'programs-container hidden';
+
+                    facilityData.programs.forEach(program => {
+                        const programItem = document.createElement('div');
+                        programItem.className = 'program-item';
+                        programItem.dataset.programId = program.id;
+                        programItem.innerHTML = `
+                        <div class="program-info">
+                            <div class="title-section">
+                                <div class="program-title">${program.programName}</div>
+                                <div class="view-count">
+                                    <i class="fas fa-eye"></i>
+                                    <span>${program.viewCount || 0}</span>
+                                </div>
+                            </div>
+                            <p class="schedule">${program.programOperationDays || ''} ${program.programOperationTime || ''}</p>
+                            <p class="price">${formatPrice(program.programPrice || 0)}원</p>
+                            <p class="target">${program.programTargetName || ''}</p>
+                        </div>
+                    `;
+                        programsContainer.appendChild(programItem);
+                    });
+
+                    facilityCard.appendChild(facilityHeader);
+                    facilityCard.appendChild(programsContainer);
+                }
+
+                fragment.appendChild(facilityCard);
             });
 
             programList.append(fragment);
 
-            // 프로그램 카드 클릭 이벤트 재바인딩
-            $('.program-card').on('click', function() {
+            // 이벤트 바인딩
+            $('.facility-header').on('click', function() {
+                const container = $(this).siblings('.programs-container');
+                const icon = $(this).find('.toggle-icon');
+
+                container.slideToggle(300);
+                icon.toggleClass('rotated');
+            });
+
+            // 프로그램 클릭 이벤트
+            $('.program-card:not(.facility-group), .program-item').on('click', function(e) {
+                e.stopPropagation();
                 const programId = $(this).data('program-id');
                 location.href = `/program/detail/${programId}`;
             });
