@@ -44,6 +44,7 @@
     background-color: var(--white);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .program-card:hover {
@@ -64,7 +65,7 @@
 
 .program-title {
     flex: 1;
-    font-size: 1.125rem;
+    font-size: 1.35rem;
     font-weight: 600;
     color: var(--text-color);
     white-space: nowrap !important;
@@ -74,7 +75,14 @@
     max-width: calc(100% - 70px);
     display: block;
     position: relative;
+}
 
+.facility-name {
+    font-size: 1.15rem !important;  /* 1.2rem에서 약간 줄임 */
+    color: var(--primary-color) !important;
+    font-weight: 500 !important;    /* 600에서 500으로 줄임 */
+    margin: 4px 0 6px 0 !important; /* 여백도 약간 조정 */
+    line-height: 1.4 !important;    /* 줄간격도 살짝 조정 */
 }
 
 .view-count {
@@ -104,11 +112,6 @@
     color: #4b5563;
 }
 
-.facility {
-    color: var(--primary-color) !important;
-    font-weight: 500;
-}
-
 .price {
     font-weight: bold;
     color: var(--secondary-color) !important;
@@ -129,6 +132,59 @@
     border-radius: 0.25rem;
     font-size: 0.75rem !important;
     color: #666 !important;
+}
+
+/* Facility Group Styles */
+.facility-group {
+    cursor: pointer;
+}
+
+.facility-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-right: 12px;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.5;
+}
+
+.program-summary {
+    font-size: 1.0rem !important;
+    color: var(--text-color);
+    margin: 8px 0;
+    font-weight: 500;
+}
+
+.programs-container {
+    margin-top: 16px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+    display: none;
+}
+
+.program-item {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.program-item:last-child {
+    border-bottom: none;
+}
+
+.program-item:hover {
+    background-color: var(--hover-color);
+}
+
+.toggle-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s;
+}
+
+.toggle-icon.rotated {
+    transform: rotate(180deg);
 }
 
 /* Pagination */
@@ -198,6 +254,16 @@
     .view-count i {
         font-size: 0.75rem;
     }
+
+    .program-title,
+    .facility-title {
+        font-size: 1.1rem;
+    }
+
+    .facility-name,
+    .program-summary {
+        font-size: 1rem;
+    }
 }
 
 /* Animations */
@@ -212,14 +278,7 @@
     }
 }
 
-.program-card {
-    animation: fadeIn 0.3s ease-out;
-}
-/* 프로그램 카드 내부 스타일 재정의 방지 */
-.program-card * {
-    overflow: visible;
-}
-
-.program-card .program-title {
-    overflow: hidden !important;
+/* Utilities */
+.hidden {
+    display: none;
 }
