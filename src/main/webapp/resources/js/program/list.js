@@ -47,16 +47,18 @@ $(document).ready(function() {
 
         // 검색 파라미터 구성
         const searchParams = {
-            cityName: $('select[name="cityName"]').val(),
-            programTargetName: $('select[name="programTargetName"]').val(),
-            events: [$('select[name="event"]').val()].filter(Boolean), // 빈 값 제거
-            weekdays: [],
+            cityName: $('select[name="cityName"]').val() || null,
+            programTargetName: $('select[name="programTargetName"]').val() || null,
+            events: $('select[name="event"]').val() ? [$('select[name="event"]').val()] : [],
+            weekdays: ['월', '화', '수', '목', '금', '토', '일'].filter(day => $(`input[name="weekdays"][value="${day}"]:checked`).length > 0),
             minPrice: $('input[name="minPrice"]').val() || null,
             maxPrice: $('input[name="maxPrice"]').val() || null,
-            sortBy: $('#sortBy').val(),
+            sortBy: $('#sortBy').val() || 'createdAt',
             page: page,
             size: 9
         };
+        console.log("검색 필터 데이터:", searchParams);
+
 
         // 체크된 요일 수집
         $('input[name="weekdays"]:checked').each(function() {

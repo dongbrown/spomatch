@@ -121,7 +121,7 @@ public class ProgramServiceImpl implements ProgramService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProgramListResponseDTO getRecommendedPrograms(String userId, int limit) {
+    public ProgramListResponseDTO getRecommendedPrograms(Long userId, int limit) {
         List<ProgramDTO> recommendedPrograms = programDAO.selectRecommendedPrograms(userId, limit);
         return ProgramListResponseDTO.builder()
                 .programs(recommendedPrograms)

@@ -30,33 +30,8 @@
             <div class="w-1/3">
                 <div class="bg-white rounded-lg shadow-lg p-6">
                     <h2 class="text-2xl font-bold mb-6 text-gray-800">인기 프로그램</h2>
-                    <div class="space-y-4">
-                        <div class="popular-program bg-gray-50 p-4 rounded-lg transition-all hover:shadow-md">
-                            <h3 class="font-bold text-lg text-gray-800 mb-2">수영 강습 프로그램</h3>
-                            <p class="text-sm text-gray-600 mb-2">올림픽 체육관</p>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-blue-600">참여자 120명</span>
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">진행중</span>
-                            </div>
-                        </div>
-
-                        <div class="popular-program bg-gray-50 p-4 rounded-lg transition-all hover:shadow-md">
-                            <h3 class="font-bold text-lg text-gray-800 mb-2">테니스 교실</h3>
-                            <p class="text-sm text-gray-600 mb-2">시민 체육공원</p>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-blue-600">참여자 85명</span>
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">진행중</span>
-                            </div>
-                        </div>
-
-                        <div class="popular-program bg-gray-50 p-4 rounded-lg transition-all hover:shadow-md">
-                            <h3 class="font-bold text-lg text-gray-800 mb-2">요가 클래스</h3>
-                            <p class="text-sm text-gray-600 mb-2">건강스포츠센터</p>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-blue-600">참여자 95명</span>
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">진행중</span>
-                            </div>
-                        </div>
+                    <div class="space-y-4" id="popularPrograms">
+                        <!-- 프로그램 항목들이 동적으로 추가될 영역 -->
                     </div>
                 </div>
             </div>
@@ -94,5 +69,6 @@
 <c:import url="/WEB-INF/views/common/footer.jsp" />
 
 <script src="/resources/js/map.js"></script>
+<script src="/resources/js/program/popular-program.js"></script>
 </body>
 </html>
