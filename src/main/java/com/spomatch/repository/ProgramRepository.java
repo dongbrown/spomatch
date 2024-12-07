@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface ProgramRepository extends JpaRepository<SportsFacilityProgram, Long> {
     List<SportsFacilityProgram> findByLatitudeIsNull();
-
+    List<SportsFacilityProgram> findAll();
 }
