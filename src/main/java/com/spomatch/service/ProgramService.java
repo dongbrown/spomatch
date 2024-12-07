@@ -25,7 +25,7 @@ public interface ProgramService {
     boolean checkProgramAvailability(Long programId);
 
     // 프로그램 추천 목록 조회
-    ProgramListResponseDTO getRecommendedPrograms(String userId, int limit);
+    ProgramListResponseDTO getRecommendedPrograms(Long userId, int limit);
 
     /**
      * JSON 파일에서 프로그램 데이터를 읽어와 DB에 저장

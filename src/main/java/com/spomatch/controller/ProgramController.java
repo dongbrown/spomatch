@@ -1,8 +1,10 @@
 package com.spomatch.controller;
 
+import com.spomatch.dto.ProgramDTO;
 import com.spomatch.dto.request.ProgramSearchRequestDTO;
 import com.spomatch.dto.response.ProgramDetailResponseDTO;
 import com.spomatch.dto.response.ProgramListResponseDTO;
+import com.spomatch.service.ProgramLikeService;
 import com.spomatch.service.ProgramService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -23,10 +26,9 @@ import java.util.Map;
 @RequestMapping("/program")
 @RequiredArgsConstructor
 public class ProgramController {
-
     private final ProgramService programService;
+    private final ProgramLikeService programLikeService;
 
-    // 프로그램 목록 페이지
     @GetMapping("/list")
     public String list(@ModelAttribute ProgramSearchRequestDTO searchDTO, Model model) {
         ProgramListResponseDTO responseDTO = programService.getProgramList(searchDTO);
@@ -34,15 +36,12 @@ public class ProgramController {
         return "program/list";
     }
 
-    // 프로그램 목록 API
     @GetMapping("/api/list")
     @ResponseBody
-    public ResponseEntity<ProgramListResponseDTO> getProgramListApi(
-            @ModelAttribute ProgramSearchRequestDTO searchDTO) {
+    public ResponseEntity<ProgramListResponseDTO> getProgramListApi(@ModelAttribute ProgramSearchRequestDTO searchDTO) {
         return ResponseEntity.ok(programService.getProgramList(searchDTO));
     }
 
-    // 프로그램 상세 페이지
     @GetMapping("/detail/{programId}")
     public String detail(@PathVariable Long programId, Model model) {
         ProgramDetailResponseDTO responseDTO = programService.getProgramDetail(programId);
@@ -50,15 +49,12 @@ public class ProgramController {
         return "program/detail";
     }
 
-    // 프로그램 상세 API
     @GetMapping("/api/detail/{programId}")
     @ResponseBody
-    public ResponseEntity<ProgramDetailResponseDTO> getProgramDetailApi(
-            @PathVariable Long programId) {
+    public ResponseEntity<ProgramDetailResponseDTO> getProgramDetailApi(@PathVariable Long programId) {
         return ResponseEntity.ok(programService.getProgramDetail(programId));
     }
 
-    // 프로그램 조회수 증가
     @PostMapping("/api/view/{programId}")
     @ResponseBody
     public ResponseEntity<Void> increaseViewCount(@PathVariable Long programId) {
@@ -66,26 +62,38 @@ public class ProgramController {
         return ResponseEntity.ok().build();
     }
 
-    // 프로그램 찜하기
     @PostMapping("/api/like/{programId}")
     @ResponseBody
-    public ResponseEntity<?> toggleLikeProgram(
-            @PathVariable Long programId,
-            HttpSession httpSession) {
-        // 세션 확인을 위한 로깅 추가
-        Long userId = (Long) httpSession.getAttribute("memberId");
-        log.info("Current Session ID: {}", httpSession.getId());
-        log.info("memberId from session: {}", userId);
-
-        if (userId == null) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "로그인 후 이용 가능합니다");
-            response.put("redirectUrl", "/login");
+    public ResponseEntity<?> toggleLikeProgram(@PathVariable Long programId, HttpSession session) {
+        Long memberId = (Long) session.getAttribute("memberId");
+        if (memberId == null) {
+            Map<String, Object> response = Map.of(
+                    "message", "로그인 후 이용 가능합니다",
+                    "redirectUrl", "/login"
+            );
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        boolean isLiked = programService.toggleLikeProgram(programId, userId);
+        boolean isLiked = programLikeService.toggleLike(programId, memberId);
         return ResponseEntity.ok(isLiked);
     }
 
+    @GetMapping("/api/programs/recommended")
+    @ResponseBody
+    public ResponseEntity<List<ProgramDTO>> getRecommendedPrograms() {
+        return ResponseEntity.ok(programLikeService.getTopLikedPrograms());
+    }
 
+    @GetMapping("/api/programs/liked")
+    @ResponseBody
+    public ResponseEntity<?> getLikedPrograms(HttpSession session) {
+        Long memberId = (Long) session.getAttribute("memberId");
+        if (memberId == null) {
+            Map<String, Object> response = Map.of(
+                    "message", "로그인 후 이용 가능합니다",
+                    "redirectUrl", "/login"
+            );
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        return ResponseEntity.ok(programLikeService.getLikedPrograms(memberId));
+    }
 }

@@ -11,42 +11,31 @@ import java.util.List;
 @Mapper
 @Repository
 public interface ProgramDAO {
-    // 프로그램 목록 조회
+    // 프로그램 목록
     List<ProgramDTO> selectProgramList(ProgramSearchRequestDTO searchDTO);
-
-    // 프로그램 전체 개수 조회
     int selectProgramCount(ProgramSearchRequestDTO searchDTO);
-
-    // 프로그램 상세 조회
     ProgramDTO selectProgramDetail(Long programId);
 
-    // 조회수 증가
+    // 조회수
     void updateViewCount(Long programId);
 
-    // 찜하기 상태 확인
-    boolean checkLikeStatus(Long programId, Long userId);
-
-    // 찜하기 추가
-    void insertProgramLike(Long programId, Long userId);
-
-    // 찜하기 삭제
-    void deleteProgramLike(Long programId, Long userId);
-
-    // 찜하기 개수 조회
+    // 찜하기
+    boolean checkLikeStatus(Long programId, Long memberId);
+    void insertProgramLike(Long programId, Long memberId);
+    void deleteProgramLike(Long programId, Long memberId);
+    List<ProgramDTO> selectLikedProgramList(Long memberId);
     Long selectLikeCount(Long programId);
 
-    // 신청 인원 조회
+    // 신청
     Integer selectRegisterCount(Long programId);
 
-    // 추천 프로그램 조회
-    List<ProgramDTO> selectRecommendedPrograms(String userId, int limit);
+    // 추천
+    List<ProgramDTO> selectRecommendedPrograms(Long memberId, int limit);
 
-    // 필터 옵션 조회
-    List<String> selectCityList();         // 시도 목록
-    List<String> selectDistrictList();     // 시군구 목록
-    List<String> selectFacilityTypeList(); // 시설유형 목록
-    List<String> selectProgramTypeList();  // 프로그램유형 목록
-    List<String> selectTargetAgeList();    // 대상연령 목록
-
-    List<ProgramDTO> selectLikedProgramList(Long memberId);
+    // 필터
+    List<String> selectCityList();
+    List<String> selectDistrictList();
+    List<String> selectFacilityTypeList();
+    List<String> selectProgramTypeList();
+    List<String> selectTargetAgeList();
 }

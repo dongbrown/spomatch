@@ -15,7 +15,6 @@ import java.util.Map;
 @Repository
 @RequiredArgsConstructor
 public class ProgramDAOImpl implements ProgramDAO {
-
     private final SqlSession sqlSession;
     private static final String NAMESPACE = "Program.";
 
@@ -40,31 +39,35 @@ public class ProgramDAOImpl implements ProgramDAO {
     }
 
     @Override
-    public boolean checkLikeStatus(Long programId, Long userId) {
+    public boolean checkLikeStatus(Long programId, Long memberId) {
         Map<String, Object> params = Map.of(
                 "programId", programId,
-                "userId", userId
+                "memberId", memberId
         );
-        Integer count = sqlSession.selectOne(NAMESPACE + "checkLikeStatus", params);
-        return count != null && count > 0;
+        return sqlSession.selectOne(NAMESPACE + "checkLikeStatus", params);
     }
 
     @Override
-    public void insertProgramLike(Long programId, Long userId) {
+    public void insertProgramLike(Long programId, Long memberId) {
         Map<String, Object> params = Map.of(
                 "programId", programId,
-                "userId", userId
+                "memberId", memberId
         );
         sqlSession.insert(NAMESPACE + "insertProgramLike", params);
     }
 
     @Override
-    public void deleteProgramLike(Long programId, Long userId) {
+    public void deleteProgramLike(Long programId, Long memberId) {
         Map<String, Object> params = Map.of(
                 "programId", programId,
-                "userId", userId
+                "memberId", memberId
         );
         sqlSession.delete(NAMESPACE + "deleteProgramLike", params);
+    }
+
+    @Override
+    public List<ProgramDTO> selectLikedProgramList(Long memberId) {
+        return sqlSession.selectList(NAMESPACE + "selectLikedProgramList", memberId);
     }
 
     @Override
@@ -78,9 +81,9 @@ public class ProgramDAOImpl implements ProgramDAO {
     }
 
     @Override
-    public List<ProgramDTO> selectRecommendedPrograms(String userId, int limit) {
+    public List<ProgramDTO> selectRecommendedPrograms(Long memberId, int limit) {
         Map<String, Object> params = Map.of(
-                "userId", userId,
+                "memberId", memberId,
                 "limit", limit
         );
         return sqlSession.selectList(NAMESPACE + "selectRecommendedPrograms", params);
@@ -109,10 +112,5 @@ public class ProgramDAOImpl implements ProgramDAO {
     @Override
     public List<String> selectTargetAgeList() {
         return sqlSession.selectList(NAMESPACE + "selectTargetAgeList");
-    }
-
-    @Override
-    public List<ProgramDTO> selectLikedProgramList(Long memberId) {
-        return sqlSession.selectList(NAMESPACE + "selectLikedProgramList", memberId);
     }
 }
