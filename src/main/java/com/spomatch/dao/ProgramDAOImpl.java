@@ -25,7 +25,7 @@ public class ProgramDAOImpl implements ProgramDAO {
 
     //시설 개수로 변경!!
     @Override
-    public int selectProgramCount(ProgramSearchRequestDTO searchDTO) {
+    public int selectFacilityCount(ProgramSearchRequestDTO searchDTO) {
         return sqlSession.selectOne(NAMESPACE + "selectFacilityCount", searchDTO);
     }
 
