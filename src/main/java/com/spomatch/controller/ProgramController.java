@@ -77,6 +77,36 @@ public class ProgramController {
         return ResponseEntity.ok(isLiked);
     }
 
+    @PostMapping("/api/unlike/{programId}")
+    @ResponseBody
+    public ResponseEntity<?> unlikeProgram(@PathVariable Long programId, HttpSession session) {
+        Long memberId = (Long) session.getAttribute("memberId");
+
+        if (memberId == null) {
+            Map<String, Object> response = Map.of(
+                    "success", false,
+                    "message", "로그인 후 이용 가능합니다",
+                    "redirectUrl", "/login"
+            );
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        try {
+            programLikeService.unlike(programId, memberId);
+            Map<String, Object> response = Map.of(
+                    "success", true,
+                    "message", "찜 목록에서 삭제되었습니다"
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = Map.of(
+                    "success", false,
+                    "message", "처리 중 오류가 발생했습니다"
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     @GetMapping("/api/programs/recommended")
     @ResponseBody
     public ResponseEntity<List<ProgramDTO>> getRecommendedPrograms() {

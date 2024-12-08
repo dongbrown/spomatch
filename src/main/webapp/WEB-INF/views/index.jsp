@@ -7,11 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAMPLE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
-    <link rel="stylesheet" href="/resources/css/main.css">
-    <link rel="stylesheet" href="/resources/css/common/style.css">
-    <link rel="stylesheet" href="/resources/css/program/common.css">
-    <link rel="stylesheet" href="/resources/css/program/detail.css">
-    <link rel="stylesheet" href="/resources/css/map.css">
+    <link rel="stylesheet" href="${path}/resources/css/main.css">
+    <link rel="stylesheet" href="${path}/resources/css/common/style.css">
+    <link rel="stylesheet" href="${path}/resources/css/program/common.css">
+    <link rel="stylesheet" href="${path}/resources/css/program/detail.css">
+    <link rel="stylesheet" href="${path}/resources/css/map.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=1eruck1cfu"></script>
 </head>
@@ -68,7 +68,7 @@
 
 <c:import url="/WEB-INF/views/common/footer.jsp" />
 
-<script src="/resources/js/map.js"></script>
-<script src="/resources/js/program/popular-program.js"></script>
+<script src="${path}/resources/js/map.js"></script>
+<script src="${path}/resources/js/program/popular-program.js"></script>
 </body>
 </html>

@@ -8,8 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>프로그램 목록</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="/resources/css/common/style.css">
-    <link rel="stylesheet" href="/resources/css/program/common.css">
+    <link rel="stylesheet" href="${path}/resources/css/common/style.css">
+    <link rel="stylesheet" href="${path}/resources/css/program/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -67,16 +67,38 @@
                     <!-- 요일 선택 -->
                     <div class="filter-group weekday-group">
                         <label>요일</label>
-                        <div class="checkbox-wrap">
-                            <label><input type="checkbox" name="weekdays" value="월"> 월</label>
-                            <label><input type="checkbox" name="weekdays" value="화"> 화</label>
-                            <label><input type="checkbox" name="weekdays" value="수"> 수</label>
-                            <label><input type="checkbox" name="weekdays" value="목"> 목</label>
-                            <label><input type="checkbox" name="weekdays" value="금"> 금</label>
-                            <label><input type="checkbox" name="weekdays" value="토"> 토</label>
-                            <label><input type="checkbox" name="weekdays" value="일"> 일</label>
+                        <div class="weekday-checkboxes">
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="월">
+                                <span>월</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="화">
+                                <span>화</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="수">
+                                <span>수</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="목">
+                                <span>목</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="금">
+                                <span>금</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="토">
+                                <span>토</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="일">
+                                <span>일</span>
+                            </label>
                         </div>
                     </div>
+
 
                     <!-- 가격 범위 -->
                     <div class="filter-group">
@@ -147,7 +169,7 @@
 
 <c:import url="/WEB-INF/views/common/footer.jsp" />
 
-<script src="/resources/js/common.js"></script>
-<script src="/resources/js/program/list.js"></script>
+<script src="${path}/resources/js/common.js"></script>
+<script src="${path}/resources/js/program/list.js"></script>
 </body>
 </html>

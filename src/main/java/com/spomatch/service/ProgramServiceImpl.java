@@ -2,6 +2,7 @@ package com.spomatch.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.spomatch.common.paging.PagingDTO;
 import com.spomatch.dao.ProgramDAO;
 import com.spomatch.dto.ProgramDTO;
 import com.spomatch.dto.request.ProgramSearchRequestDTO;
@@ -52,23 +53,48 @@ public class ProgramServiceImpl implements ProgramService {
     private String clientSecret;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ProgramListResponseDTO getProgramList(ProgramSearchRequestDTO searchDTO) {
-        // 전체 개수 조회
-        int totalCount = programDAO.selectProgramCount(searchDTO);
+        // 시설 기준으로 전체 개수 조회 (페이징용)
+        int totalFacilities = programDAO.selectFacilityCount(searchDTO);
 
-        // 페이징 정보 설정
-        searchDTO.calculatePaging(totalCount);
+        // 페이징 정보 계산
+        searchDTO.calculatePaging(totalFacilities);
 
-        // 프로그램 목록 조회
+        // 필터링된 프로그램 목록 조회
         List<ProgramDTO> programs = programDAO.selectProgramList(searchDTO);
+
+        // 필터 옵션 조회
+        Map<String, Object> filterOptions = getFilterOptions();
+
+        // 결과가 없는 경우 빈 목록 반환
+        if (programs == null) {
+            programs = Collections.emptyList();
+        }
 
         // 응답 DTO 생성
         return ProgramListResponseDTO.builder()
                 .programs(programs)
                 .paging(searchDTO.getPaging())
-                .filters(getFilterOptions())
+                .filters(filterOptions)
                 .build();
+    }
+
+
+
+    // 페이징 결과 검증
+    private void validatePagingResult(PagingDTO paging, List<ProgramDTO> programs) {
+        if (paging == null) {
+            throw new IllegalStateException("페이징 정보가 없습니다.");
+        }
+
+        if (programs == null) {
+            throw new IllegalStateException("프로그램 목록이 null입니다.");
+        }
+
+        if (paging.getCurrentPage() > paging.getTotalPages() && paging.getTotalPages() > 0) {
+            throw new IllegalArgumentException("요청한 페이지 번호가 총 페이지 수를 초과했습니다.");
+        }
     }
 
     @Override
@@ -128,14 +154,28 @@ public class ProgramServiceImpl implements ProgramService {
                 .build();
     }
 
-    // 필터 옵션 조회
     private Map<String, Object> getFilterOptions() {
         Map<String, Object> filters = new HashMap<>();
-        filters.put("cities", programDAO.selectCityList());         // 시도 목록
-        filters.put("districts", programDAO.selectDistrictList());  // 시군구 목록
-        filters.put("facilityTypes", programDAO.selectFacilityTypeList()); // 시설유형 목록
-        filters.put("programTypes", programDAO.selectProgramTypeList());   // 프로그램유형 목록
-        filters.put("targetAges", programDAO.selectTargetAgeList());      // 대상연령 목록
+
+        try {
+            filters.put("cities", programDAO.selectCityList());
+            filters.put("districts", programDAO.selectDistrictList());
+            filters.put("facilityTypes", programDAO.selectFacilityTypeList());
+            filters.put("programTypes", programDAO.selectProgramTypeList());
+            filters.put("targetAges", programDAO.selectTargetAgeList());
+
+            // 종목 리스트 추가
+            List<String> events = Arrays.asList(
+                    "수영", "골프", "탁구", "배드민턴", "댄스",
+                    "필라테스", "헬스", "테니스", "에어로빅", "기타"
+            );
+            filters.put("events", events);
+        } catch (Exception e) {
+            log.error("필터 옵션 조회 중 오류 발생", e);
+            // 에러 발생 시 빈 맵 반환
+            return Collections.emptyMap();
+        }
+
         return filters;
     }
 

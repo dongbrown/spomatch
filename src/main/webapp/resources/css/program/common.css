@@ -1,4 +1,4 @@
-/* Variables - match with style.css */
+/* Variables */
 :root {
     --primary-color: #3498db;
     --secondary-color: #2ecc71;
@@ -37,6 +37,7 @@
     margin-bottom: 2rem;
 }
 
+/* Program Card */
 .program-card {
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
@@ -52,7 +53,7 @@
     box-shadow: 0 4px 6px -1px var(--shadow-color);
 }
 
-/* Title Section with View Count */
+/* Title Section */
 .title-section {
     display: flex;
     justify-content: space-between;
@@ -78,13 +79,25 @@
 }
 
 .facility-name {
-    font-size: 1.15rem !important;  /* 1.2rem에서 약간 줄임 */
+    font-size: 1.15rem !important;
     color: var(--primary-color) !important;
-    font-weight: 500 !important;    /* 600에서 500으로 줄임 */
-    margin: 4px 0 6px 0 !important; /* 여백도 약간 조정 */
-    line-height: 1.4 !important;    /* 줄간격도 살짝 조정 */
+    font-weight: 500 !important;
+    margin: 4px 0 6px 0 !important;
+    line-height: 1.4 !important;
 }
 
+.facility-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-right: 12px;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.5;
+}
+
+/* View Count */
 .view-count {
     flex: 0 0 auto;
     display: flex;
@@ -117,11 +130,7 @@
     color: var(--secondary-color) !important;
 }
 
-.location {
-    color: #666 !important;
-}
-
-.schedule {
+.location, .schedule {
     color: #666 !important;
 }
 
@@ -134,20 +143,9 @@
     color: #666 !important;
 }
 
-/* Facility Group Styles */
+/* Facility Group */
 .facility-group {
     cursor: pointer;
-}
-
-.facility-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-right: 12px;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    line-height: 1.5;
 }
 
 .program-summary {
@@ -157,30 +155,84 @@
     font-weight: 500;
 }
 
+/* Programs Container */
 .programs-container {
-    margin-top: 16px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 16px;
     display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    position: relative;
+}
+
+.programs-wrapper {
+    position: relative;
+}
+
+/* Program List & Items */
+.programs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .program-item {
-    padding: 16px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background-color: var(--white);
     cursor: pointer;
-}
-
-.program-item:last-child {
-    border-bottom: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .program-item:hover {
-    background-color: var(--hover-color);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Buttons */
+.program-nav-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.nav-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.nav-button:hover:not(:disabled) {
+    background-color: var(--secondary-color);
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Toggle Button */
+.toggle-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
 }
 
 .toggle-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
     font-size: 1.2rem;
-    transition: transform 0.3s;
 }
 
 .toggle-icon.rotated {
@@ -230,6 +282,24 @@
     background-color: var(--white);
 }
 
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 프로그램 아이템 페이드 효과 */
+.program-item {
+    opacity: 1;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .program-list {
@@ -264,18 +334,59 @@
     .program-summary {
         font-size: 1rem;
     }
+
+    .nav-button {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.weekday-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.weekday-checkboxes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.weekday-label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    background-color: var(--white);
+    color: var(--text-color);
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.weekday-label input {
+    display: none; /* 숨김 처리 */
+}
+
+.weekday-label span {
+    pointer-events: none; /* 텍스트 선택 방지 */
+}
+
+.weekday-label:hover {
+    background-color: var(--hover-color);
+}
+
+.weekday-label input:checked + span {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
 }
 
 /* Utilities */

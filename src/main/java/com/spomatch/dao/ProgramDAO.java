@@ -13,7 +13,7 @@ import java.util.List;
 public interface ProgramDAO {
     // 프로그램 목록
     List<ProgramDTO> selectProgramList(ProgramSearchRequestDTO searchDTO);
-    int selectProgramCount(ProgramSearchRequestDTO searchDTO);
+    int selectFacilityCount(ProgramSearchRequestDTO searchDTO);
     ProgramDTO selectProgramDetail(Long programId);
 
     // 조회수

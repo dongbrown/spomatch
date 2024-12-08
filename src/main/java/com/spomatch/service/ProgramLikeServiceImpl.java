@@ -51,6 +51,28 @@ public class ProgramLikeServiceImpl implements ProgramLikeService {
     }
 
     @Override
+    @Transactional
+    public void unlike(Long programId, Long memberId) {
+        // 찜 상태 확인
+        boolean isLiked = checkLikeStatus(programId, memberId);
+
+        if (isLiked) {
+            // DB에서 찜 정보 삭제
+            programDAO.deleteProgramLike(programId, memberId);
+
+            // Redis에서 최근 찜 목록 업데이트
+//            removeFromRecentLikes(programId);
+
+            // Redis의 인기 프로그램 스코어 감소
+//            updateTopPrograms(programId, -1);
+
+            log.info("Program unliked - programId: {}, memberId: {}", programId, memberId);
+        } else {
+            log.warn("Program was not liked - programId: {}, memberId: {}", programId, memberId);
+        }
+    }
+
+    @Override
     @Scheduled(cron = "0 0 * * * *")
     public void updateTopLikedPrograms() {
         ListOperations<String, String> listOps = redisTemplate.opsForList();
@@ -102,4 +124,8 @@ public class ProgramLikeServiceImpl implements ProgramLikeService {
     public List<ProgramDTO> getLikedPrograms(Long memberId) {
         return programDAO.selectLikedProgramList(memberId);
     }
+
+
+
+
 }
