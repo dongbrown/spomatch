@@ -144,6 +144,7 @@
         WHERE fg.facility_rank BETWEEN #{start} + 1 AND #{start} + #{pageSize}
         ORDER BY fg.facility_rank, fp.created_at DESC;
     </select>
+
     <!-- 프로그램 전체 개수 조회 -->
     <select id="selectProgramCount" parameterType="ProgramSearchRequestDTO" resultType="int">
         SELECT COUNT(*)
@@ -368,5 +369,52 @@
         INNER JOIN program_likes pl ON p.id = pl.program_id
         WHERE pl.member_id = #{memberId}
         ORDER BY pl.created_at DESC
+    </select>
+
+    <!-- 시설 기준 전체 개수 조회 -->
+    <select id="selectFacilityCount" parameterType="ProgramSearchRequestDTO" resultType="int">
+        SELECT COUNT(DISTINCT fclty_nm)
+        FROM facility_program fp
+        WHERE 1=1
+        <if test="cityName != null and cityName != ''">
+            AND ctprvn_nm = #{cityName}
+        </if>
+        <if test="districtName != null and districtName != ''">
+            AND signgu_nm = #{districtName}
+        </if>
+        <if test="programTargetName != null and programTargetName != ''">
+            AND progrm_trget_nm = #{programTargetName}
+        </if>
+        <if test="events != null and events.size > 0">
+            AND (
+            <foreach item="event" collection="events" separator=" OR " open="(" close=")">
+                <choose>
+                    <when test="event == '수영'">
+                        progrm_nm LIKE CONCAT('%', '수영', '%')
+                    </when>
+                    <when test="event == '골프'">
+                        progrm_nm LIKE CONCAT('%', '골프', '%')
+                    </when>
+                    <!-- ... 다른 이벤트들 ... -->
+                </choose>
+            </foreach>
+            )
+        </if>
+        <if test="weekdays != null and weekdays.size > 0">
+            AND
+            <foreach item="day" collection="weekdays" separator="OR" open="(" close=")">
+                REGEXP_LIKE(progrm_estbl_wkday_nm, #{day})
+            </foreach>
+        </if>
+        <if test="minPrice != null">
+            <![CDATA[
+            AND progrm_prc >= #{minPrice}
+        ]]>
+        </if>
+        <if test="maxPrice != null">
+            <![CDATA[
+            AND progrm_prc <= #{maxPrice}
+        ]]>
+        </if>
     </select>
 </mapper>
