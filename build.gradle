@@ -77,6 +77,9 @@ dependencies {
 	//mysql
 	implementation 'mysql:mysql-connector-java:8.0.33'
 
+	//캐시
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'com.github.ben-manes.caffeine:caffeine'
 
 }
 
