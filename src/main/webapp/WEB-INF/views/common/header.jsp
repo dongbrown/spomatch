@@ -10,8 +10,8 @@
         <nav>
             <a href="/program/list">체육 프로그램</a>
             <a href="#">참여마당</a>
-            <a href="#">알림마당</a>
-            <a href="#">자료실</a>
+            <a href="/notice/list">알림마당</a>
+            <a href="/dataroom/list">자료실</a>
         </nav>
 
         <div class="auth-links">
