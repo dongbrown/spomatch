@@ -19,7 +19,6 @@ public class SportsFacilityProgram {
 
     @Id
     @JsonProperty("PROGRM_ID")  // 추가
-
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

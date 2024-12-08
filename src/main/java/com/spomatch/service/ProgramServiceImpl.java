@@ -280,22 +280,35 @@ public class ProgramServiceImpl implements ProgramService {
 
 
     private String generateCompositeId(SportsFacilityProgram program) {
-        return String.format("%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s",
-                program.getFacilityName(),          // 시설명 (FCLTY_NM)
-                program.getDistrictName(),          // 구군명 (SIGNGU_NM)
-                program.getFacilityTypeName(),      // 시설유형명 (FCLTY_TY_NM)
-                program.getCityName(),              // 시도명 (CTPRVN_NM)
-                program.getProgramName(),           // 프로그램명 (PROGRM_NM)
-                program.getProgramTypeName(),       // 프로그램 유형명 (PROGRM_TY_NM)
-                program.getProgramTargetName(),     // 프로그램 대상명 (PROGRM_TRGET_NM)
-                program.getProgramBeginDate(),      // 프로그램 시작일자 (PROGRM_BEGIN_DE)
-                program.getProgramEndDate(),        // 프로그램 종료일자 (PROGRM_END_DE)
-                program.getProgramOperationDays(),  // 프로그램 개설요일명 (PROGRM_ESTBL_WKDAY_NM)
-                program.getProgramOperationTime(),  // 프로그램 개설시간대값 (PROGRM_ESTBL_TIZN_VALUE)
-                program.getProgramPrice(),          // 프로그램 가격 (PROGRM_PRC)
-                program.getProgramPriceTypeName(),  // 프로그램가격유형명 (PROGRM_PRC_TY_NM)
-                program.getProgramRecruitNumber()   // 프로그램 모집인원수 (PROGRM_RCRIT_NMPR_CO)
+        return String.format("%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s",
+                nullToEmpty(program.getFacilityName()),
+                nullToEmpty(program.getFacilityTypeName()),
+                nullToEmpty(program.getCityCode()),
+                nullToEmpty(program.getCityName()),
+                nullToEmpty(program.getDistrictCode()),
+                nullToEmpty(program.getDistrictName()),
+                nullToEmpty(program.getFacilityAddress()),
+                nullToEmpty(program.getFacilityPhoneNumber()),
+                nullToEmpty(program.getProgramTypeName()),
+                nullToEmpty(program.getProgramName()),
+                nullToEmpty(program.getProgramTargetName()),
+                nullToEmpty(program.getProgramBeginDate()),
+                nullToEmpty(program.getProgramEndDate()),
+                nullToEmpty(program.getProgramOperationDays()),
+                nullToEmpty(program.getProgramOperationTime()),
+                nullToEmpty(String.valueOf(program.getProgramRecruitNumber())),
+                nullToEmpty(String.valueOf(program.getProgramPrice())),
+                nullToEmpty(program.getProgramPriceTypeName()),
+                nullToEmpty(program.getHomepageUrl()),
+                nullToEmpty(program.getSafetyManagementContent()),
+                nullToEmpty(program.getEducationGoalContent()),
+                nullToEmpty(program.getProtectorParticipationYn()),
+                nullToEmpty(program.getLeaderQualificationContent())
         ).toLowerCase().replaceAll("\\s+", "");
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value.trim();
     }
 
     @Override
