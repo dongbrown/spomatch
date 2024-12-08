@@ -11,4 +11,6 @@ public interface ProgramLikeService {
     List<ProgramDTO> getTopLikedPrograms();
     boolean checkLikeStatus(Long programId, Long memberId);
     List<ProgramDTO> getLikedPrograms(Long memberId);
+
+    void unlike(Long programId, Long memberId);
 }

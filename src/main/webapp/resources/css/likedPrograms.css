@@ -1,45 +1,87 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    margin: 0;
-    padding: 20px;
-}
-
-h1 {
+/* 페이지 타이틀 */
+.page-title {
     text-align: center;
-    color: #333;
+    margin: 2rem 0;
+    color: var(--text-color);
 }
 
-.program-list {
+/* 빈 상태 메시지 */
+.no-items {
+    text-align: center;
+    padding: 3rem;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    margin: 2rem 0;
+}
+
+.no-items i {
+    font-size: 3rem;
+    color: var(--light-text-color);
+    margin-bottom: 1rem;
+}
+
+.no-items p {
+    color: var(--light-text-color);
+    margin-bottom: 1.5rem;
+}
+
+/* 프로그램 카드 수정 */
+.program-card {
+    position: relative;
+    cursor: pointer;
+}
+
+.like-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--error-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.like-btn:hover {
+    transform: scale(1.1);
+}
+
+.like-btn.active i {
+    color: var(--error-color);
+}
+
+.date-range {
+    color: var(--light-text-color);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.date-range i {
+    margin-right: 0.5rem;
+}
+
+.bottom-info {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
+    margin-top: 1rem;
 }
 
-.program-item {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 15px;
-    margin: 10px 0;
-    width: 80%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.price-type {
+    font-size: 0.8rem;
+    color: var(--light-text-color);
 }
 
-.program-item h2 {
-    margin: 0 0 10px;
-    color: #007bff;
-}
-
-.program-item p {
-    margin: 5px 0;
-}
-
-.program-item a {
-    color: #007bff;
+.detail-link {
+    color: var(--primary-color);
     text-decoration: none;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
-.program-item a:hover {
+.detail-link:hover {
     text-decoration: underline;
 }

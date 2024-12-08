@@ -8,8 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>프로그램 목록</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="/resources/css/common/style.css">
-    <link rel="stylesheet" href="/resources/css/program/common.css">
+    <link rel="stylesheet" href="${path}/resources/css/common/style.css">
+    <link rel="stylesheet" href="${path}/resources/css/program/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -147,7 +147,7 @@
 
 <c:import url="/WEB-INF/views/common/footer.jsp" />
 
-<script src="/resources/js/common.js"></script>
-<script src="/resources/js/program/list.js"></script>
+<script src="${path}/resources/js/common.js"></script>
+<script src="${path}/resources/js/program/list.js"></script>
 </body>
 </html>

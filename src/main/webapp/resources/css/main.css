@@ -177,3 +177,13 @@
         padding: 1rem;
     }
 }
+
+.wishlist-link {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.wishlist-link:hover {
+    color: var(--primary-color);
+}

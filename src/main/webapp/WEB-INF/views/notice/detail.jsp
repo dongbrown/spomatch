@@ -1,13 +1,14 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>공지사항 상세보기</title>
-    <link rel="stylesheet" href="/resources/css/notice.css">
-    <link rel="stylesheet" href="/resources/css/main.css">
-    <link rel="stylesheet" href="/resources/css/common/style.css">
+    <link rel="stylesheet" href="${path}/resources/css/notice.css">
+    <link rel="stylesheet" href="${path}/resources/css/main.css">
+    <link rel="stylesheet" href="${path}/resources/css/common/style.css">
 </head>
 <body>
 <c:import url="/WEB-INF/views/common/header.jsp" />
@@ -75,6 +76,6 @@
 
 <c:import url="/WEB-INF/views/common/footer.jsp" />
 
-<script src="/resources/js/notice.js"></script>
+<script src="${path}/resources/js/notice.js"></script>
 </body>
 </html>

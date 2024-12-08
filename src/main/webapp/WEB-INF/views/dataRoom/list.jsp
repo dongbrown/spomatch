@@ -5,9 +5,9 @@
 <head>
     <meta charset="UTF-8">
     <title>자료실</title>
-    <link rel="stylesheet" href="/resources/css/dataRoom.css">
-    <link rel="stylesheet" href="/resources/css/main.css">
-    <link rel="stylesheet" href="/resources/css/common/style.css">
+    <link rel="stylesheet" href="${path}/resources/css/dataRoom.css">
+    <link rel="stylesheet" href="${path}/resources/css/main.css">
+    <link rel="stylesheet" href="${path}/resources/css/common/style.css">
 </head>
 <body>
 <c:import url="/WEB-INF/views/common/header.jsp" />
@@ -76,6 +76,6 @@
 
 <c:import url="/WEB-INF/views/common/footer.jsp" />
 
-<script src="/resources/js/dataRoom.js"></script>
+<script src="${path}/resources/js/dataRoom.js"></script>
 </body>
 </html>
