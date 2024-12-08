@@ -67,16 +67,38 @@
                     <!-- 요일 선택 -->
                     <div class="filter-group weekday-group">
                         <label>요일</label>
-                        <div class="checkbox-wrap">
-                            <label><input type="checkbox" name="weekdays" value="월"> 월</label>
-                            <label><input type="checkbox" name="weekdays" value="화"> 화</label>
-                            <label><input type="checkbox" name="weekdays" value="수"> 수</label>
-                            <label><input type="checkbox" name="weekdays" value="목"> 목</label>
-                            <label><input type="checkbox" name="weekdays" value="금"> 금</label>
-                            <label><input type="checkbox" name="weekdays" value="토"> 토</label>
-                            <label><input type="checkbox" name="weekdays" value="일"> 일</label>
+                        <div class="weekday-checkboxes">
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="월">
+                                <span>월</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="화">
+                                <span>화</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="수">
+                                <span>수</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="목">
+                                <span>목</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="금">
+                                <span>금</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="토">
+                                <span>토</span>
+                            </label>
+                            <label class="weekday-label">
+                                <input type="checkbox" name="weekdays" value="일">
+                                <span>일</span>
+                            </label>
                         </div>
                     </div>
+
 
                     <!-- 가격 범위 -->
                     <div class="filter-group">
