@@ -1,4 +1,4 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <c:set var="path" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
@@ -54,9 +54,105 @@
                         <i class="download-icon"></i>
                     </a>
                 </td>
-                <td class="center">홍성군체육회</td>
+                <td class="center">관리자</td>
                 <td class="center">223</td>
                 <td class="center">2024-03-05</td>
+            </tr>
+            <tr>
+                <td class="center">9</td>
+                <td>
+                    <a href="#" class="title-link">
+                        체육시설 안전관리 매뉴얼
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">156</td>
+                <td class="center">2024-03-04</td>
+            </tr>
+            <tr>
+                <td class="center">8</td>
+                <td>
+                    <a href="#" class="title-link">
+                        체육시설 이용 신청서 양식
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">342</td>
+                <td class="center">2024-03-03</td>
+            </tr>
+            <tr>
+                <td class="center">7</td>
+                <td>
+                    <a href="#" class="title-link">
+                        체육동호회 등록 신청서
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">198</td>
+                <td class="center">2024-03-02</td>
+            </tr>
+            <tr>
+                <td class="center">6</td>
+                <td>
+                    <a href="#" class="title-link">
+                        체육시설 대관 규정집
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">267</td>
+                <td class="center">2024-03-01</td>
+            </tr>
+            <tr>
+                <td class="center">5</td>
+                <td>
+                    <a href="#" class="title-link">
+                        생활체육 지도자 신청 양식
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">189</td>
+                <td class="center">2024-02-28</td>
+            </tr>
+            <tr>
+                <td class="center">4</td>
+                <td>
+                    <a href="#" class="title-link">
+                        체육시설 회원 가입 신청서
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">423</td>
+                <td class="center">2024-02-27</td>
+            </tr>
+            <tr>
+                <td class="center">3</td>
+                <td>
+                    <a href="#" class="title-link">
+                        체육프로그램 제안서 양식
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">167</td>
+                <td class="center">2024-02-26</td>
+            </tr>
+            <tr>
+                <td class="center">2</td>
+                <td>
+                    <a href="#" class="title-link">
+                        체육시설 환불 신청서
+                        <i class="download-icon"></i>
+                    </a>
+                </td>
+                <td class="center">관리자</td>
+                <td class="center">298</td>
+                <td class="center">2024-02-25</td>
             </tr>
             <tr>
                 <td class="center">1</td>
@@ -66,7 +162,7 @@
                         <i class="download-icon"></i>
                     </a>
                 </td>
-                <td class="center">홍성군체육회</td>
+                <td class="center">관리자관리자</td>
                 <td class="center">1729</td>
                 <td class="center">2021-03-11</td>
             </tr>

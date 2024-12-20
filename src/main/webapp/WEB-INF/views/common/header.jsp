@@ -10,7 +10,7 @@
 
         <nav>
             <a href="${path}/program/list">체육 프로그램</a>
-            <a href="${path}/#">참여마당</a>
+            <a href="${path}/board/list">참여마당</a>
             <a href="${path}/notice/list">알림마당</a>
             <a href="${path}/dataroom/list">자료실</a>
         </nav>
