@@ -388,6 +388,56 @@
     border-radius: 0.25rem;
     padding: 0.25rem 0.5rem;
 }
+.search-filter-container {
+    background-color: var(--background-color);
+    border-radius: 0.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.filter-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn i {
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn.collapsed i {
+    transform: rotate(180deg);
+}
+
+.search-filter {
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    max-height: 1000px; /* 적절한 높이로 조정 */
+    opacity: 1;
+    overflow: hidden;
+}
+
+.search-filter.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+}
 
 /* Utilities */
 .hidden {

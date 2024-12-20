@@ -5,6 +5,16 @@ $(document).ready(function() {
         $('#sortBy').val(savedSortBy);
     }
 
+    // 필터 초기 상태 설정
+    function initializeFilterState() {
+        const isFilterCollapsed = localStorage.getItem('filterCollapsed') === 'true';
+        if (isFilterCollapsed) {
+            $('.search-filter').hide();
+            $('.filter-toggle-btn').addClass('collapsed')
+                .find('i').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        }
+    }
+
     // 검색 폼 제출
     $('#searchForm').on('submit', function(e) {
         e.preventDefault();
@@ -239,6 +249,16 @@ $(document).ready(function() {
 
 // 이벤트 바인딩 함수
     function bindEvents() {
+        $('.filter-toggle-btn').off('click').on('click', function() {
+            const searchFilter = $('.search-filter');
+            $(this).find('i').toggleClass('fa-chevron-up fa-chevron-down');
+            $(this).toggleClass('collapsed');
+            searchFilter.slideToggle(300);
+
+            // 토글 상태 저장
+            const isCollapsed = !searchFilter.is(':visible');
+            localStorage.setItem('filterCollapsed', isCollapsed);
+        });
         // 시설 헤더 클릭 이벤트
         $('.facility-header').off('click').on('click', function() {
             const container = $(this).parent().find('.programs-container');
@@ -491,6 +511,7 @@ $(document).ready(function() {
     }
 
     // 초기화
+    initializeFilterState();
     initializeFromURL();
     loadPrograms(1);
 });

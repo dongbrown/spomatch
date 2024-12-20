@@ -5,16 +5,16 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>알림마당</title>
-    <link rel="stylesheet" href="${path}/resources/css/notice.css">
+    <title>참여마당</title>
+    <link rel="stylesheet" href="${path}/resources/css/board.css">
     <link rel="stylesheet" href="${path}/resources/css/main.css">
     <link rel="stylesheet" href="${path}/resources/css/common/style.css">
 </head>
 <body>
 <c:import url="/WEB-INF/views/common/header.jsp" />
 
-<main class="notice-container">
-    <h1>공지사항</h1>
+<main class="board-container">
+    <h1>참여마당</h1>
 
     <!-- 검색 영역 -->
     <div class="search-area">
@@ -24,11 +24,11 @@
             <option value="writer">작성자</option>
         </select>
         <input type="text" id="searchKeyword" placeholder="검색어를 입력하세요">
-        <button onclick="searchNotice()"></button>
+        <button onclick="searchBoard()"></button>
     </div>
 
-    <!-- 공지사항 목록 -->
-    <table class="notice-table">
+    <!-- 게시글 목록 -->
+    <table class="board-table">
         <thead>
         <tr>
             <th>번호</th>
@@ -41,73 +41,73 @@
         <tbody>
         <tr>
             <td>10</td>
-            <td><span class="notice-badge">공지</span> 2024년도 체육시설 연간 이용료 안내</td>
-            <td>관리자</td>
+            <td>테니스 동호회 정기모임 후기</td>
+            <td>테니스매니아</td>
             <td>2024-12-08</td>
-            <td>342</td>
+            <td>67</td>
         </tr>
         <tr>
             <td>9</td>
-            <td><span class="notice-badge">공지</span> 연말연시 체육시설 운영시간 변경 안내</td>
-            <td>관리자</td>
+            <td>배드민턴 클럽 회원 모집합니다</td>
+            <td>셔틀콕</td>
             <td>2024-12-07</td>
-            <td>256</td>
+            <td>98</td>
         </tr>
         <tr>
             <td>8</td>
-            <td>체육관 정기점검에 따른 임시휴관 안내</td>
-            <td>관리자</td>
+            <td>요가 수업 후기 공유해요</td>
+            <td>요가사랑</td>
             <td>2024-12-06</td>
-            <td>198</td>
+            <td>142</td>
         </tr>
         <tr>
             <td>7</td>
-            <td>수영장 수질검사 결과 공고</td>
-            <td>관리자</td>
+            <td>농구 동호회 회원 모집</td>
+            <td>슬램덩크</td>
             <td>2024-12-05</td>
-            <td>167</td>
+            <td>89</td>
         </tr>
         <tr>
             <td>6</td>
-            <td>주차장 이용 안내사항 변경</td>
-            <td>관리자</td>
+            <td>헬스장 이용 꿀팁 공유</td>
+            <td>헬스왕</td>
             <td>2024-12-04</td>
-            <td>221</td>
+            <td>234</td>
         </tr>
         <tr>
             <td>5</td>
-            <td>헬스장 신규 운동기구 도입 안내</td>
-            <td>관리자</td>
+            <td>필라테스 초보 도전기</td>
+            <td>필라걸</td>
             <td>2024-12-03</td>
-            <td>312</td>
-        </tr>
-        <tr>
-            <td>4</td>
-            <td>체육시설 회원카드 재발급 절차 안내</td>
-            <td>관리자</td>
-            <td>2024-12-02</td>
-            <td>178</td>
-        </tr>
-        <tr>
-            <td>3</td>
-            <td><span class="notice-badge">공지</span> 체육관 이용시간 변경 안내</td>
-            <td>관리자</td>
-            <td>2024-12-01</td>
-            <td>245</td>
-        </tr>
-        <tr>
-            <td>2</td>
-            <td>수영장 정기점검 일정 안내</td>
-            <td>관리자</td>
-            <td>2024-11-30</td>
             <td>156</td>
         </tr>
         <tr>
+            <td>4</td>
+            <td>축구 동호회 친선경기 후기</td>
+            <td>축구왕</td>
+            <td>2024-12-02</td>
+            <td>112</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>수영 동호회 회원 모집합니다</td>
+            <td>수영매니아</td>
+            <td>2024-12-01</td>
+            <td>42</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>탁구 대회 참가자 모집</td>
+            <td>탁구왕</td>
+            <td>2024-11-30</td>
+            <td>85</td>
+        </tr>
+        <tr>
             <td>1</td>
-            <td>12월 휴관일 안내</td>
-            <td>관리자</td>
+            <td>체육관 이용 후기입니다</td>
+            <td>운동하자</td>
             <td>2024-11-29</td>
-            <td>189</td>
+            <td>120</td>
         </tr>
         </tbody>
     </table>
@@ -121,7 +121,7 @@
         <a href="#" class="page-link">&raquo;</a>
     </div>
 
-    <!-- 글쓰기 버튼 (관리자용) -->
+    <!-- 글쓰기 버튼 (로그인 사용자용) -->
     <div class="button-area">
         <button onclick="location.href='write.jsp'" class="write-btn">글쓰기</button>
     </div>
@@ -129,6 +129,6 @@
 
 <c:import url="/WEB-INF/views/common/footer.jsp" />
 
-<script src="${path}/resources/js/notice.js"></script>
+<script src="${path}/resources/js/board.js"></script>
 </body>
 </html>

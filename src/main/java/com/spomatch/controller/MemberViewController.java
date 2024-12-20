@@ -27,7 +27,7 @@ public class MemberViewController {
             log.info("최초 접근 페이지 저장 완료: {}", referer);
         }
 
-        return "/login";
+        return "login";
     }
 
     @GetMapping("/register")
@@ -44,6 +44,6 @@ public class MemberViewController {
                     session.getAttribute("originPage"), referer);
         }
 
-        return "/register";
+        return "register";
     }
 }

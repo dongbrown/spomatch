@@ -18,6 +18,14 @@
 <main>
     <div class="container">
         <!-- 검색 필터 영역 -->
+
+        <div class="search-filter-container">
+            <div class="filter-header">
+                <h2>검색 필터</h2>
+                <button type="button" class="filter-toggle-btn" aria-label="필터 토글">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+            </div>
         <div class="search-filter">
             <form id="searchForm">
                 <div class="filter-row">
@@ -116,6 +124,7 @@
                     <button type="reset" class="btn btn-secondary">초기화</button>
                 </div>
             </form>
+        </div>
         </div>
 
         <!-- 정렬 옵션 -->
