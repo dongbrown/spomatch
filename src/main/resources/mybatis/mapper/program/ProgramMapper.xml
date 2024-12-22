@@ -417,4 +417,25 @@
         WHERE pl.member_id = #{memberId}
         ORDER BY pl.created_at DESC
     </select>
+
+    <!-- 추천 프로그램 목록 전체 삭제 -->
+    <delete id="deleteAllRecommendations">
+        DELETE FROM program_recommendations
+    </delete>
+
+    <!-- 추천 프로그램 목록 일괄 삽입 -->
+    <insert id="insertRecommendations" parameterType="java.util.List">
+        INSERT INTO program_recommendations (program_id, `rank`, created_at)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.programId}, #{item.rank}, NOW())
+        </foreach>
+    </insert>
+
+    <!-- 추천 프로그램 조회 -->
+    <select id="selectRecommendationList" resultType="long">
+        SELECT program_id
+        FROM program_recommendations
+        ORDER BY `rank` ASC
+    </select>
 </mapper>

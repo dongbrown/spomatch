@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +25,6 @@ public class ProgramDAOImpl implements ProgramDAO {
         return sqlSession.selectList(NAMESPACE + "selectProgramList", searchDTO);
     }
 
-    //시설 개수로 변경!!
     @Override
     public int selectFacilityCount(ProgramSearchRequestDTO searchDTO) {
         return sqlSession.selectOne(NAMESPACE + "selectFacilityCount", searchDTO);
@@ -113,5 +114,24 @@ public class ProgramDAOImpl implements ProgramDAO {
     @Override
     public List<String> selectTargetAgeList() {
         return sqlSession.selectList(NAMESPACE + "selectTargetAgeList");
+    }
+
+    @Override
+    public void deleteAllRecommendations() {
+        sqlSession.delete(NAMESPACE + "deleteAllRecommendations");
+        log.info("Deleted all recommendations from DB");
+    }
+
+    @Override
+    public void insertRecommendations(List<Map<String, Object>> recommendations) {
+        if (!recommendations.isEmpty()) {
+            sqlSession.insert(NAMESPACE + "insertRecommendations", recommendations);
+            log.info("Inserted {} recommendations into DB", recommendations.size());
+        }
+    }
+
+    @Override
+    public List<Long> selectRecommendationList() {
+        return sqlSession.selectList(NAMESPACE + "selectRecommendationList");
     }
 }

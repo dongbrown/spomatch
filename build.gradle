@@ -70,7 +70,7 @@ dependencies {
 	implementation 'com.google.guava:guava:32.1.1-jre'
 	implementation 'org.springframework:spring-webflux'
 
-	//mysql
+	//mysql (중복 제거)
 	implementation 'mysql:mysql-connector-java:8.0.33'
 
 	//캐시
@@ -88,15 +88,16 @@ bootRun {
 	jvmArgs = ['-Dspring.devtools.restart.enabled=true']
 }
 
-war {
+tasks.named('war') {
 	enabled = true
 	archiveFileName = 'spomatch.war'
 }
 
-bootWar {
+tasks.named('bootWar') {
 	enabled = true
+	mainClass = 'com.spomatch.SpomatchApplication'
 }
 
-bootJar {
+tasks.named('bootJar') {
 	enabled = false
 }
