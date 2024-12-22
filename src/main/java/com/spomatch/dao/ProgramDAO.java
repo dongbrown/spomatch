@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 @Repository
@@ -38,4 +39,9 @@ public interface ProgramDAO {
     List<String> selectFacilityTypeList();
     List<String> selectProgramTypeList();
     List<String> selectTargetAgeList();
+
+    // 추천 프로그램 관리
+    void deleteAllRecommendations();
+    void insertRecommendations(List<Map<String, Object>> recommendations);
+    List<Long> selectRecommendationList();
 }

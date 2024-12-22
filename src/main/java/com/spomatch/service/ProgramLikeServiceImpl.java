@@ -21,8 +21,9 @@ public class ProgramLikeServiceImpl implements ProgramLikeService {
     private final ProgramDAO programDAO;
     private final RedisTemplate<String, String> redisTemplate;
     private static final String RECENT_LIKES_KEY = "recent:likes";
-    private static final String TOP_PROGRAMS_KEY = "top:liked:programs";
-    private static final int MAX_LIST_SIZE = 1000;
+    private static final String RECOMMENDATION_LIST_KEY = "recommendation:list";
+    private static final int MAX_SAMPLE_SIZE = 600;
+    private static final int MAX_RECOMMENDATION_SIZE = 100;
 
     @Override
     @Transactional
@@ -38,13 +39,12 @@ public class ProgramLikeServiceImpl implements ProgramLikeService {
     }
 
     @Override
-    @Scheduled(fixedRate = 6000)
     public void addRecentLike(Long programId) {
         ListOperations<String, String> listOps = redisTemplate.opsForList();
         listOps.rightPush(RECENT_LIKES_KEY, programId.toString());
 
         Long size = listOps.size(RECENT_LIKES_KEY);
-        if (size != null && size > MAX_LIST_SIZE) {
+        if (size != null && size > MAX_SAMPLE_SIZE) {
             listOps.leftPop(RECENT_LIKES_KEY);
         }
         log.info("Added recent like for program: {}", programId);
@@ -53,19 +53,10 @@ public class ProgramLikeServiceImpl implements ProgramLikeService {
     @Override
     @Transactional
     public void unlike(Long programId, Long memberId) {
-        // 찜 상태 확인
         boolean isLiked = checkLikeStatus(programId, memberId);
 
         if (isLiked) {
-            // DB에서 찜 정보 삭제
             programDAO.deleteProgramLike(programId, memberId);
-
-            // Redis에서 최근 찜 목록 업데이트
-//            removeFromRecentLikes(programId);
-
-            // Redis의 인기 프로그램 스코어 감소
-//            updateTopPrograms(programId, -1);
-
             log.info("Program unliked - programId: {}, memberId: {}", programId, memberId);
         } else {
             log.warn("Program was not liked - programId: {}, memberId: {}", programId, memberId);
@@ -74,45 +65,86 @@ public class ProgramLikeServiceImpl implements ProgramLikeService {
 
     @Override
     @Scheduled(cron = "0 0 * * * *")
+    @Transactional
     public void updateTopLikedPrograms() {
-        ListOperations<String, String> listOps = redisTemplate.opsForList();
-        List<String> recentLikesStr = listOps.range(RECENT_LIKES_KEY, 0, -1);
+        try {
+            ListOperations<String, String> listOps = redisTemplate.opsForList();
+            List<String> recentLikesStr = listOps.range(RECENT_LIKES_KEY, 0, -1);
 
-        if (recentLikesStr == null || recentLikesStr.isEmpty()) {
-            return;
+            if (recentLikesStr == null || recentLikesStr.isEmpty()) {
+                return;
+            }
+
+            List<Long> recentLikes = recentLikesStr.stream()
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+
+            Map<Long, Long> frequencyMap = recentLikes.stream()
+                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+            List<Long> topPrograms = frequencyMap.entrySet().stream()
+                    .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
+                    .limit(MAX_RECOMMENDATION_SIZE)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+
+            // Redis 업데이트
+            ListOperations<String, String> recommendationOps = redisTemplate.opsForList();
+            redisTemplate.delete(RECOMMENDATION_LIST_KEY);
+            topPrograms.forEach(programId ->
+                    recommendationOps.rightPush(RECOMMENDATION_LIST_KEY, programId.toString())
+            );
+
+            // DB 업데이트
+            List<Map<String, Object>> recommendations = new ArrayList<>();
+            for (int i = 0; i < topPrograms.size(); i++) {
+                Map<String, Object> params = new HashMap<>();
+                params.put("programId", topPrograms.get(i));
+                params.put("rank", i + 1);
+                recommendations.add(params);
+            }
+
+            programDAO.deleteAllRecommendations();
+            if (!recommendations.isEmpty()) {
+                programDAO.insertRecommendations(recommendations);
+            }
+
+            log.info("Updated top liked programs in both Redis and DB. Total programs: {}", topPrograms.size());
+        } catch (Exception e) {
+            log.error("Error updating top liked programs", e);
+            throw e;
         }
-
-        List<Long> recentLikes = recentLikesStr.stream()
-                .map(Long::parseLong)
-                .collect(Collectors.toList());
-
-        Map<Long, Long> frequencyMap = recentLikes.stream()
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-        List<Long> topPrograms = frequencyMap.entrySet().stream()
-                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-                .limit(100)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        redisTemplate.opsForValue().set(TOP_PROGRAMS_KEY,
-                topPrograms.stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(",")));
     }
 
     @Override
     public List<ProgramDTO> getTopLikedPrograms() {
-        String topProgramsStr = redisTemplate.opsForValue().get(TOP_PROGRAMS_KEY);
-        if (topProgramsStr == null) {
+        try {
+            // 먼저 Redis에서 조회 시도
+            ListOperations<String, String> listOps = redisTemplate.opsForList();
+            List<String> recommendationList = listOps.range(RECOMMENDATION_LIST_KEY, 0, -1);
+
+            // Redis에 데이터가 없으면 DB에서 조회
+            if (recommendationList == null || recommendationList.isEmpty()) {
+                List<Long> dbRecommendations = programDAO.selectRecommendationList();
+                if (dbRecommendations.isEmpty()) {
+                    return Collections.emptyList();
+                }
+                return dbRecommendations.stream()
+                        .map(programDAO::selectProgramDetail)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            }
+
+            // Redis 데이터 반환
+            return recommendationList.stream()
+                    .map(Long::parseLong)
+                    .map(programDAO::selectProgramDetail)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error getting top liked programs", e);
             return Collections.emptyList();
         }
-
-        return Arrays.stream(topProgramsStr.split(","))
-                .map(Long::parseLong)
-                .map(programDAO::selectProgramDetail)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -124,8 +156,4 @@ public class ProgramLikeServiceImpl implements ProgramLikeService {
     public List<ProgramDTO> getLikedPrograms(Long memberId) {
         return programDAO.selectLikedProgramList(memberId);
     }
-
-
-
-
 }

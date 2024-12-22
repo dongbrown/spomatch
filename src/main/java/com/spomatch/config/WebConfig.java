@@ -17,8 +17,8 @@ public class WebConfig implements WebMvcConfigurer {
         ThymeleafViewResolver resolver = new ThymeleafViewResolver();
         resolver.setTemplateEngine(templateEngine);
         resolver.setCharacterEncoding("UTF-8");
-        resolver.setOrder(1);
-        resolver.setViewNames(new String[] {"/*"});  // templates 폴더의 모든 HTML
+        resolver.setOrder(1);  // 먼저 처리
+        resolver.setViewNames(new String[] {"login", "register"});  // login과 register만 Thymeleaf로 처리
         return resolver;
     }
 
@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
         resolver.setViewClass(JstlView.class);
         resolver.setPrefix("/WEB-INF/views/");
         resolver.setSuffix(".jsp");
-        resolver.setOrder(2);  // HTML 다음으로 처리
+        resolver.setOrder(2);  // Thymeleaf 다음으로 처리
         return resolver;
     }
 }
